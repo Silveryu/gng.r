@@ -32,7 +32,7 @@ make install
 cd ..
 ```
 
-Now u can use library from R
+Now you can use library from R
 
 ```{R}
 library(devtools)
