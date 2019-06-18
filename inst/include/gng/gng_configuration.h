@@ -38,12 +38,16 @@ struct GNGConfiguration {
 	int max_nodes; //=1000;
 	/**Uniform grid optimization*/
 	bool uniformgrid_optimization; //=true,lazyheap=true;
+    /**Aproximate nearest neighbours optimization*/
+    bool ann_optimization;
 	/**Lazy heap optimization*/
 	bool lazyheap_optimization;
 	/**Bounding box specification*/
 
 	/**Dimensionality of examples*/
 	unsigned dim;
+
+	size_t ef;
 
 	std::vector<double> orig;
 	std::vector<double> axis;
@@ -102,6 +106,7 @@ struct GNGConfiguration {
 		datasetType = DatasetSampling;
 		max_nodes = 1000;
 		uniformgrid_optimization = false;
+		ann_optimization = false;
 		graph_memory_bound = 200000 * sizeof(double);
 
 		lazyheap_optimization = false;

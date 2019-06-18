@@ -9,7 +9,7 @@ file(GLOB GMUMR_SOURCES
     "${SRC_DIR}/utils/*.cpp" "${SRC_DIR}/utils/*.c")
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${R_LD_FLAGS}") 
-set(CMAKE_CXX_FLAGS "${R_CXX_FLAGS} -std=c++0x")
+set(CMAKE_CXX_FLAGS "${R_CXX_FLAGS} -std=c++14 ")
 
 if(APPLE)
     set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
