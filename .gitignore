@@ -175,3 +175,6 @@ demo/samples/*.html
 
 # misc
 *.log
+
+# CMake
+cmake-build-*
