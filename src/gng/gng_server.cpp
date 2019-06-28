@@ -151,6 +151,7 @@ void GNGServer::init(GNGConfiguration configuration,
 					current_configuration.eps_w, current_configuration.eps_n,
 					current_configuration.dim,
 					current_configuration.uniformgrid_optimization,
+					current_configuration.ann_optimization,
 					current_configuration.lazyheap_optimization,
 					current_configuration.experimental_utility_option,
 					current_configuration.experimental_utility_k, 
@@ -295,6 +296,11 @@ unsigned GNGServer::getGNGErrorIndex() const{
 	return gngAlgorithm->getErrorIndex();
 }
 
+///Constructor needed for RCPPInterface
+GNGServer::GNGServer(GNGConfiguration * configuration) {
+    init(*configuration, nullptr /*input_graph*/);
+}
+
 #ifdef RCPP_INTERFACE
 
 void GNGServer::_updateClustering(){
@@ -306,11 +312,6 @@ void GNGServer::_updateClustering(){
 //than actual nodes (especially in the case of utility version of GNG)
 unsigned int GNGServer::_getLastNodeIndex() const {
 	return gngGraph->get_maximum_index() + 1;
-}
-
-///Constructor needed for RCPPInterface
-GNGServer::GNGServer(GNGConfiguration * configuration) {
-    init(*configuration, 0 /*input_graph*/);
 }
 
 ///Moderately slow function returning node descriptors
