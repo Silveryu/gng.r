@@ -82,9 +82,10 @@ public:
 
 	~GNGServer();
 
-#ifdef RCPP_INTERFACE
 	//Constructor needed for RCPPInterface
-	GNGServer(GNGConfiguration * configuration);
+    GNGServer(GNGConfiguration * configuration);
+
+#ifdef RCPP_INTERFACE
 
 	///Moderately slow function returning node descriptors
 	Rcpp::List getNode(int index);
@@ -125,9 +126,9 @@ private:
 
 	GNGConfiguration current_configuration;
 
-	std::auto_ptr<gmum::GNGAlgorithm> gngAlgorithm;
-	std::auto_ptr<gmum::GNGGraph> gngGraph;
-	std::auto_ptr<gmum::GNGDataset> gngDataset;
+	std::unique_ptr<gmum::GNGAlgorithm> gngAlgorithm;
+	std::unique_ptr<gmum::GNGGraph> gngGraph;
+	std::unique_ptr<gmum::GNGDataset> gngDataset;
 
 	//Called from constructors
 	void init(GNGConfiguration configuration, std::istream * input_graph = 0);
