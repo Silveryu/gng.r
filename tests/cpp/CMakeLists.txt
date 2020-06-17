@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(gmumr_tests)
 
 file (GLOB TEST_SOURCES 
-    "${TESTS_DIR}/cec/*.cpp"
     "${TESTS_DIR}/gng/*.cpp"
-    "${TESTS_DIR}/svm/*.cpp"
     "${TESTS_DIR}/benchmarks/*.cpp")
 
 # Graphing library
@@ -15,5 +13,7 @@ set(CMAKE_CXX_FLAGS "${R_CXX_FLAGS} -std=c++14")
 add_definitions(-DTEST_DATA_PATH="${TEST_DATA_PATH}")
 add_executable(gmumr_tests ${TEST_SOURCES})
 target_include_directories(gmumr_tests PUBLIC ${Python_INCLUDE_DIRS}  ${Python_NumPy_INCLUDE_DIRS})
-target_link_libraries(gmumr_tests gmum.r gtest gtest_main pthread -lbenchmark ${Python_LIBRARIES})
+target_link_libraries(gmumr_tests gmum.r gtest gtest_main pthread faiss -lbenchmark ${Python_LIBRARIES} ${CMAKE_CUDA_STANDARD}  ${faiss_lib} ${OpenBLAS_LIB})
 INSTALL(TARGETS gmumr_tests DESTINATION ${TESTS_DIR})
+add_executable(ann_tests ann/ann.cpp)
+target_link_libraries(ann_tests  faiss  ${faiss_lib} ${OpenBLAS_LIB})
