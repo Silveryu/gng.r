@@ -128,14 +128,14 @@ static int __int_rnd(int min, int max) {
   return (ed_c_rand() % (max - min + 1) + min);
 }
 
-static double __double_rnd(double min, double max) {
-  return min + (max - min) * ((double) ed_c_rand()) / RAND_MAX;
+static float __float_rnd(float min, float max) {
+  return min + (max - min) * ((float) ed_c_rand()) / RAND_MAX;
 }
 
-static void _write_bin(ostream & out, double v) {
+static void _write_bin(ostream & out, float v) {
   if (isCpuLittleEndian ^ isFileLittleEndian) {
     // Switch between the two
-    char data[8], *pDouble = (char*) (double*) (&v);
+    char data[8], *pDouble = (char*) (float*) (&v);
     for (int i = 0; i < 8; ++i) {
       data[i] = pDouble[7 - i];
     }
@@ -144,8 +144,8 @@ static void _write_bin(ostream & out, double v) {
     out.write((char*) (&v), 8);
 }
 
-static inline void _write_bin_vect(ostream & out, vector<double> & v) {
-  _write_bin(out, (double) v.size());
+static inline void _write_bin_vect(ostream & out, vector<float> & v) {
+  _write_bin(out, (float) v.size());
   // TODO: remove
   REPORT(v.size());
   for (size_t i = 0; i < v.size(); ++i) {
@@ -153,9 +153,9 @@ static inline void _write_bin_vect(ostream & out, vector<double> & v) {
   }
 }
 
-static inline double _load_bin(istream & in) {
+static inline float _load_bin(istream & in) {
   char data[8];
-  double res;
+  float res;
   in.read(data, 8);
   if (isCpuLittleEndian ^ isFileLittleEndian) {
     char data_load[8];
@@ -170,9 +170,9 @@ static inline double _load_bin(istream & in) {
   return res;
 }
 
-static inline vector<double> _load_bin_vector(istream & in) {
+static inline vector<float> _load_bin_vector(istream & in) {
   int N = (int) _load_bin(in);
-  vector<double> x;
+  vector<float> x;
   x.reserve(N);
   REPORT(N);
   for (int i = 0; i < N; ++i) {

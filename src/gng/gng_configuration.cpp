@@ -15,6 +15,9 @@ void GNGConfiguration::deserialize(std::istream & in)  {
         /**Ann optimization*/
         in >> ann_optimization;
 
+        /**Ann optimization approach*/
+        in >> ann_approach;
+
 		/**Lazy heap optimization*/
 		in >> lazyheap_optimization;
 		/**Bounding box specification*/
@@ -24,8 +27,8 @@ void GNGConfiguration::deserialize(std::istream & in)  {
 
 		REPORT(dim);
 
-		orig = vector<double>(dim, 0);
-		axis = vector<double>(dim, 0);
+		orig = vector<float>(dim, 0);
+		axis = vector<float>(dim, 0);
 
 		for (size_t i = 0; i < dim; ++i) {
 			in >> axis[i] >> orig[i];
@@ -72,6 +75,8 @@ void GNGConfiguration::deserialize(std::istream & in)  {
 		out << uniformgrid_optimization << endl; //=true,lazyheap=true;
         /**Ann optimization*/
         out << ann_optimization << endl; //=true,lazyheap=true;
+        /**Ann optimization approach*/
+        out << ann_approach << endl;
         /**Lazy heap optimization*/
 		out << lazyheap_optimization << endl;
 		/**Bounding box specification*/

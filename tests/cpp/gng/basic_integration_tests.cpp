@@ -15,11 +15,11 @@ using namespace gmum;
 unsigned int sleep_ms = 500;
 
 /** Run GNGAlgorithm on a cube (3-dimensional) with given parameters
- * @returns pair<double, double> : nodes, mean_error
+ * @returns pair<float, float> : nodes, mean_error
  */
-pair<double, double> test_convergence(GNGConfiguration * cnf = 0,
+pair<float, float> test_convergence(GNGConfiguration * cnf = 0,
 		int num_database = 1000, int ms_loop = 5000, string save_filename = "",
-		double* extra_examples = 0, int extra_samples_size = 0,
+		float* extra_examples = 0, int extra_samples_size = 0,
 		string load_filename = "") {
 	GNGConfiguration config = GNGConfiguration::getDefaultConfiguration();
 	config.uniformgrid_optimization = true;
@@ -42,13 +42,13 @@ pair<double, double> test_convergence(GNGConfiguration * cnf = 0,
 	s->run();
 
 	cerr << "Allocating " << (config.dim) * num_database << endl << flush;
-	double * vect = new double[(config.dim) * num_database];
+	float * vect = new float[(config.dim) * num_database];
 	for (int i = 0; i < num_database; ++i) {
 		for (int j = 0; j <= config.dim; ++j)
 			if (j == 0)
 				vect[j + (i) * (config.dim)] = 0.0;
 			else if (j < config.dim)
-				vect[j + (i) * (config.dim)] = __double_rnd(0, 1);
+				vect[j + (i) * (config.dim)] = __float_rnd(0, 1);
 	}
 
 	cerr << "Allocated examples\n";
@@ -90,7 +90,7 @@ pair<double, double> test_convergence(GNGConfiguration * cnf = 0,
 
 	gmum::sleep(sleep_ms);
 
-	pair<double, double> t = pair<double, double>(
+	pair<float, float> t = pair<float, float>(
 			s->getGraph().get_number_nodes(), s->getMeanError());
 	if (save_filename != "") {
 		cerr << "GNGNumericTest::Saving to GraphML\n";
@@ -106,7 +106,7 @@ TEST(GNGNumericTest, BasicConvergenceUtility) {
 	config.experimental_utility_option = GNGConfiguration::UtilityBasicOn;
 	config.verbosity = 3;
 
-	pair<double, double> results = test_convergence(&config, 1000, 6000);
+	pair<float, float> results = test_convergence(&config, 1000, 6000);
 	ASSERT_GE(fabs(results.first), 60.0);
 	ASSERT_LE(fabs(results.second), 1e-4);
 }
@@ -122,13 +122,13 @@ TEST(GNGNumericTest, Serialization) {
 	s->run();
 
 	cerr << "Allocating " << (config.dim) * num_database << endl << flush;
-	double * vect = new double[(config.dim) * num_database];
+	float * vect = new float[(config.dim) * num_database];
 	for (int i = 0; i < num_database; ++i) {
 		for (int j = 0; j <= config.dim; ++j)
 			if (j == 0)
 				vect[j + (i) * (config.dim)] = 0.0;
 			else if (j < config.dim)
-				vect[j + (i) * (config.dim)] = __double_rnd(0, 1);
+				vect[j + (i) * (config.dim)] = __float_rnd(0, 1);
 
 	}
 
@@ -160,7 +160,7 @@ TEST(GNGNumericTest, Serialization) {
 	s->save("test_serialization.bin");
 	delete s;
 
-	pair<double, double> results = test_convergence(&config, 1000, 1000,
+	pair<float, float> results = test_convergence(&config, 1000, 1000,
 			"" /*save filename*/, 0 /*extra examples*/, 0 /*extra_sample_size*/,
 			"test_serialization.bin" /*load_filename*/);
 
@@ -170,7 +170,7 @@ TEST(GNGNumericTest, Serialization) {
 
 TEST(GNGNumericTest, BasicConvergence) {
 	GNGConfiguration config = GNGConfiguration::getDefaultConfiguration();
-	pair<double, double> results = test_convergence(&config, 1000, 5000,
+	pair<float, float> results = test_convergence(&config, 1000, 5000,
 			"basic_convergence.graphml");
 	ASSERT_GE(fabs(results.first), 60.0);
 	ASSERT_LE(fabs(results.second), 1e-4);
@@ -182,20 +182,20 @@ TEST(GNGNumericTest, FewDimsSkewedUGConvergence) {
 	config.max_nodes = 1000;
 	config.lazyheap_optimization = true;
 	config.dim = 5;
-	config.axis = vector<double>(config.dim, 20.0);
-	config.orig = vector<double>(config.dim, -1.0);
+	config.axis = vector<float>(config.dim, 20.0);
+	config.orig = vector<float>(config.dim, -1.0);
 	config.orig[2] = -4.0;
 
 	//vector would be better here obviously.
 	int num_extra = 50000;
-	double * extra_examples = new double[num_extra * (config.dim + 1)];
+	float * extra_examples = new float[num_extra * (config.dim + 1)];
 	for (int i = 0; i < num_extra; ++i) {
 		for (int j = 0; j <= config.dim; ++j)
-			extra_examples[j + (i) * (config.dim + 1)] = __double_rnd(0, 2)
+			extra_examples[j + (i) * (config.dim + 1)] = __float_rnd(0, 2)
 					+ (2.0);
 	}
 
-	pair<double, double> results = test_convergence(&config, 100000, 60000,
+	pair<float, float> results = test_convergence(&config, 100000, 60000,
 			"fewdims.graphml", extra_examples, num_extra * (config.dim + 1));
 
 	ASSERT_GE(results.first, 10.0);
@@ -211,7 +211,7 @@ TEST(GNGNumericTest, FewDimsUGConvergence) {
 	config.dim = 4;
 	config.setBoundingBox(0.0, 1.0);
 
-	pair<double, double> results = test_convergence(&config, 1000, 60000,
+	pair<float, float> results = test_convergence(&config, 1000, 60000,
 			"fewdimsugconvergence.graphml");
 
 	ASSERT_GE(results.first, 10.0);
@@ -224,7 +224,7 @@ TEST(GNGNumericTest, ManyDimsUGConvergence) {
 	config.dim = 10;
 	config.setBoundingBox(0.0, 1.0);
 
-	pair<double, double> results = test_convergence(&config, 100, 3000);
+	pair<float, float> results = test_convergence(&config, 100, 3000);
 
 	ASSERT_GE(results.first, 10.0);
 	ASSERT_LE(fabs(results.second), 1e-4);
@@ -236,7 +236,7 @@ TEST(GNGNumericTest, ManyDimsNoUG) {
 	config.dim = 50;
 	config.setBoundingBox(0.0, 1.0);
 
-	pair<double, double> results = test_convergence(&config, 100, 50000);
+	pair<float, float> results = test_convergence(&config, 100, 50000);
 
 	ASSERT_GE(fabs(results.first), 100.0);
 	ASSERT_LE(fabs(results.second), 1e-20);
@@ -250,7 +250,7 @@ TEST(GNGNumericTest, BasicConvergeLazyHeapUG) {
 	cerr << "Checking correctness " + to_string(config.check_correctness())
 			<< endl;
 	config.check_correctness();
-	pair<double, double> results = test_convergence(&config, 10000, 1000);
+	pair<float, float> results = test_convergence(&config, 10000, 1000);
 	ASSERT_GE(results.first, 10.0);
 	ASSERT_LE(fabs(results.second), 1e-2);
 }
