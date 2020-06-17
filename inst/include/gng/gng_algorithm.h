@@ -16,6 +16,13 @@
 #include <memory>
 #include <hnsw/distance.hpp>
 #include <hnsw/index.hpp>
+#include <faiss/IndexFlat.h>
+#include <faiss/Index.h>
+#include <faiss/IndexHNSW.h>
+#include <faiss/index_factory.h>
+#include <faiss/MetaIndexes.h>
+#include <gng_configuration.h>
+
 
 #include "utils/threading.h"
 #include "utils/circular_buffer.h"
@@ -53,13 +60,14 @@ public:
 	 * @param eps_n See original paper (TODO: add description)
 	 * @param dim Dimensionality
 	 */
-	GNGAlgorithm(GNGGraph * g, GNGDataset * db, double * boundingbox_origin,
-			double * boundingbox_axis, double l, int max_nodes = 1000,
-			int max_age = 200, double alpha = 0.95, double betha = 0.9995,
-			double lambda = 200, double eps_w = 0.05, double eps_n = 0.0006,
+	GNGAlgorithm(GNGGraph * g, GNGDataset * db, float * boundingbox_origin,
+			float * boundingbox_axis, float l, int max_nodes = 1000,
+			int max_age = 200, float alpha = 0.95, float betha = 0.9995,
+			float lambda = 200, float eps_w = 0.05, float eps_n = 0.0006,
 			int dim = 3, bool uniformgrid_optimization = true, bool ann_optimization = true,
+			int ann_approach = GNGConfiguration::LSH,
 			bool lazyheap_optimization = true, unsigned int utility_option =
-					GNGConfiguration::UtilityOff, double utility_k = -1,
+					GNGConfiguration::UtilityOff, float utility_k = -1,
             int max_iter = -1, int seed=777,
 			boost::shared_ptr<Logger> logger = boost::shared_ptr<Logger>());
 
@@ -67,7 +75,7 @@ public:
 	void runAlgorithm();
 
 	///Retrieve closest node's gng_index to the example
-	int predict(const std::vector<double> &);
+	int predict(const std::vector<float> &);
 
 	//Updates clustering field on the dataset kept in memory
 	void updateClustering();
@@ -80,8 +88,8 @@ public:
 	unsigned getErrorIndex() const;
 	void setMaxNodes(int value);
 	int getIteration() const;
-	double getMeanError();
-	vector<pair<double, double> > getMeanErrorStatistics();
+	float getMeanError();
+	vector<pair<float, float> > getMeanErrorStatistics();
 
 	//Retrieve clustering result.
 	//@note pauses algorithm as many
@@ -93,30 +101,30 @@ public:
 	typedef std::list<int> Node;
 
 	int calculated_errors; //for convergence checking
-	circular_buffer<pair<double, double> > m_mean_error; //error of the network
+	circular_buffer<pair<float, float> > m_mean_error; //error of the network
 	int m_lambda; //lambda parameter
-	double m_eps_w, m_eps_n; //epsilon of the winner and of the neighbour
+	float m_eps_w, m_eps_n; //epsilon of the winner and of the neighbour
 	int m_max_age, m_max_nodes, m_iteration;
 
 	bool m_toggle_uniformgrid, m_toggle_lazyheap, m_toggle_ann;
 
     int max_iter;
 
-	double m_utility_k;
+	float m_utility_k;
 	int m_utility_option;
-
-	double m_alpha, m_betha;
-	double * m_betha_powers;
+    int m_ann_approach;
+	float m_alpha, m_betha;
+	float * m_betha_powers;
 	int m_betha_powers_to_n_length;
-	double * m_betha_powers_to_n;
+	float * m_betha_powers_to_n;
 	int m_betha_powers_size;
-	double m_accumulated_error;
+	float m_accumulated_error;
 
 	int dim;
 	boost::shared_ptr<Logger> m_logger;
 
 
-	double m_density_threshold, m_grow_rate;
+	float m_density_threshold, m_grow_rate;
 
 	/** Constants used by lazy heap implementation */
 	int s, c;
@@ -125,11 +133,13 @@ public:
 	GNGDataset * g_db;
 	UniformGrid<std::vector<Node>, Node, int> * ug;
 
-    using index_t = hnsw::hnsw_index<int , std::vector<double>, hnsw::l2_square_distance_t>;
 
-    // faiss::Index* ann;
+    hnsw::hnsw_index<long, std::vector<float>, hnsw::l2_square_distance_t>* ann;
+    //hnsw::hnsw_index<long, std::vector<float>,  hnsw::l2_square_distance_t>* ann;
 
-    index_t * ann;
+    //faiss::Index* ann;
+
+    //faiss::IndexHNSWFlat* ann;
 
     GNGLazyErrorHeap errorHeap;
 
@@ -156,8 +166,8 @@ private:
     mt19937 mt_rand;
 
 	//@return error and closest node index
-	std::pair<double, int> adapt(const double * ex, const double * extra);
-	std::pair<int, int> _getNearestNeurons(const double *ex);
+	std::pair<float, int> adapt(const float * ex, const float * extra);
+	std::pair<int, int> _getNearestNeurons(const float *ex);
 
 	void randomInit();
 	void addNewNode();
@@ -169,27 +179,27 @@ private:
 
 	//Utility functions
 
-	double calculateAccumulatedError();
-	void resetUniformGrid(double * orig, double *axis, double l);
+	float calculateAccumulatedError();
+	void resetUniformGrid(float * orig, float *axis, float l);
 	void resizeUniformGrid();
 
 	//sets clustering assignment of given node
 	void set_clustering(unsigned int ex, unsigned int node_idx);
 
-	void increaseErrorNew(GNGNode * node, double error);
+	void increaseErrorNew(GNGNode * node, float error);
 	void fixErrorNew(GNGNode * node);
-	double getMaximumError() const;
+	float getMaximumError() const;
 	void decreaseAllErrorsNew();
 	void decreaseErrorNew(GNGNode * node);
-	void setErrorNew(GNGNode * node, double error);
-	void increaseError(GNGNode * node, double error);
+	void setErrorNew(GNGNode * node, float error);
+	void increaseError(GNGNode * node, float error);
 	void decreaseAllErrors();
 	void decreaseError(GNGNode * node);
-	void setError(GNGNode * node, double error);
+	void setError(GNGNode * node, float error);
 
 	// Note: this code is not optimal and is inserted only for research purposes
-	double getUtility(int i);
-	void setUtility(int i, double u);
+	float getUtility(int i);
+	void setUtility(int i, float u);
 	void utilityCriterionCheck();
 	void decreaseAllUtility();
 
@@ -201,7 +211,7 @@ private:
 /**Design hack for passing distance function dist(index, position)*/
 struct GNGGraphAccessHack {
 	static GNGGraph * pool;
-	static double dist(int index, double *position) {
+	static float dist(int index, float *position) {
 		return pool->get_euclidean_dist((*pool)[index].position, position);
 	}
 };

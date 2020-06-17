@@ -23,7 +23,7 @@ class GNGEdge {
 public:
 	GNGEdge * rev;
 	int nr;
-	double error;
+	float error;
 	int age;
 
 	GNGEdge() :
@@ -35,7 +35,7 @@ public:
 	}
 };
 
-//Dump format [N nodes] [dim] (doubles) N * node->dump()
+//Dump format [N nodes] [dim] (floats) N * node->dump()
 
 ///Warning dev note: GNGNode fields have to be properly copied/initialized form 
 ///both GNGAlgorithm and 2 functions in GNGNode
@@ -45,15 +45,15 @@ public:
 	//TODO: change to GNGEdge, no need for dandling pointers
 	typedef std::vector<GNGEdge*>::iterator EdgeIterator;
 
-	double utility; //0
+	float utility; //0
 	int error_cycle; //1
-	double error; //2
+	float error; //2
 	int edgesCount; //3
 	int nr; //4
 	bool _position_owner; //5
 	unsigned int dim; //6
-	double extra_data; //7 - extra data that is voted among vertices when adapting
-	double * position; //8... 8+dim-1
+	float extra_data; //7 - extra data that is voted among vertices when adapting
+	float *position; //8... 8+dim-1
 
 	// Construct empty GNGNode
 	GNGNode() {
@@ -68,9 +68,9 @@ public:
 		}
 	}
 
-	double dist(GNGNode * gnode) const { //dist doesnt account for param
+	float dist(GNGNode * gnode) const { //dist doesnt account for param
 		using namespace std;
-		double ret = 0;
+		float ret = 0;
 		for (size_t i = 0; i < dim; ++i)
 			ret += (this->position[i] - gnode->position[i])
 					* (this->position[i] - gnode->position[i]);
@@ -87,8 +87,8 @@ public:
 		return out;
 	}
 
-	vector<double> dumpEdges() {
-		vector<double> dump(1 + this->size(), 0.0);
+	vector<float> dumpEdges() {
+		vector<float> dump(1 + this->size(), 0.0);
 		dump[0] = this->size();
 		for (size_t i = 0; i < this->size(); ++i)
 			dump[i + 1] = (*this)[i]->nr;
@@ -96,8 +96,8 @@ public:
 	}
 
 	///Dumps to vector of numbers
-	vector<double> dumpVertexData() {
-		vector<double> dump(8 + dim, 0.0);
+	vector<float> dumpVertexData() {
+		vector<float> dump(8 + dim, 0.0);
 		dump[0] = utility;
 		dump[1] = error_cycle;
 		dump[2] = error;
@@ -112,7 +112,7 @@ public:
 		return dump;
 	}
 	//Loads from vector
-	void loadVertexData(vector<double> & x, double * position_ptr) {
+	void loadVertexData(vector<float> & x, float * position_ptr) {
 
 		utility = x[0];
 		error_cycle = x[1];
@@ -127,9 +127,9 @@ public:
 			position[i] = x[i + 8];
 		}
 	}
-	void loadVertexData(vector<double>::iterator & itr, int gng_dim,
-			double * position_ptr) {
-		vector<double> dump;
+	void loadVertexData(vector<float>::iterator & itr, int gng_dim,
+			float * position_ptr) {
+		vector<float> dump;
 		dump.reserve(8 + gng_dim);
 
 		std::copy(itr + 1, itr + 9 + gng_dim, std::back_inserter(dump));
