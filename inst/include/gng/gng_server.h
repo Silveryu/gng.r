@@ -55,7 +55,7 @@ public:
 		this->m_logger->verbosity = verbosity;
 	}
 
-	double nodeDistance(int id1, int id2) const;
+	float nodeDistance(int id1, int id2) const;
 
 	void save(std::string filename);
 
@@ -65,16 +65,16 @@ public:
 	void exportToGraphML(std::string filename);
 
 	///Insert examples
-	void insertExamples(double * positions, double * extra,
-			double * probability, unsigned int count, unsigned int dim);
+	void insertExamples(float * positions, float * extra,
+			float * probability, unsigned int count, unsigned int dim);
 
 
     unsigned getDatasetSize() const;
 	unsigned getGNGErrorIndex() const;
 	bool isRunning() const;
-	vector<double> getMeanErrorStatistics();
+	vector<float> getMeanErrorStatistics();
 	unsigned int getNumberNodes() const;
-	double getMeanError();
+	float getMeanError();
 	GNGConfiguration getConfiguration();
 	GNGAlgorithm & getAlgorithm();
 	GNGGraph & getGraph();

@@ -32,6 +32,10 @@ struct GNGConfiguration {
 		UtilityOff, UtilityBasicOn
 	};
 
+	enum AnnApproach {
+        LSH, ONLINE_HNSW, ONLINE_HNSW_MV
+	};
+
     int seed;
 
 	/**Maximum number of nodes*/
@@ -49,22 +53,22 @@ struct GNGConfiguration {
 
 	size_t ef;
 
-	std::vector<double> orig;
-	std::vector<double> axis;
+	std::vector<float> orig;
+	std::vector<float> axis;
 	/**Max edge age*/
 	int max_age; //=200;
 	/**Alpha coefficient*/
-	double alpha; //=0.95;
+	float alpha; //=0.95;
 	/**Beta coefficient*/
-	double beta; //=0.9995;
+	float beta; //=0.9995;
 	/**Lambda coefficient*/
-	double lambda; //=200;
+	float lambda; //=200;
 	/**Epsilion v. How strongly move winning node*/
-	double eps_w; //=0.05;
+	float eps_w; //=0.05;
 	/**Memory bound*/
 	int graph_memory_bound;
 	/**Epsilion n*/
-	double eps_n; //=0.0006;
+	float eps_n; //=0.0006;
 
     ///Maximum number of iterations
     int max_iter; //=-1;
@@ -81,10 +85,13 @@ struct GNGConfiguration {
 	int starting_nodes;
 
 	///Utility constant
-	double experimental_utility_k;
+	float experimental_utility_k;
 
 	///Utility option. Currently supported simples utility
 	int experimental_utility_option;
+
+    /// Ann option
+    int ann_approach;
 
 	GNGConfiguration() {
         seed = -1; //is equivalent to null
@@ -98,6 +105,8 @@ struct GNGConfiguration {
 		experimental_utility_option = (int) UtilityOff;
 		experimental_utility_k = 1.5;
 
+		ann_approach = (int)LSH;
+
 		graph_storage = RAMMemory;
 
 		dim = 3;
@@ -107,7 +116,7 @@ struct GNGConfiguration {
 		max_nodes = 1000;
 		uniformgrid_optimization = false;
 		ann_optimization = false;
-		graph_memory_bound = 200000 * sizeof(double);
+		graph_memory_bound = 200000 * sizeof(float);
 
 		lazyheap_optimization = false;
 		max_age = 200;
@@ -126,9 +135,9 @@ struct GNGConfiguration {
 	void serialize(std::ostream & out) const;
 
     //This is a simplification - we assume square box
-	void setBoundingBox(double min, double max) {
-		orig = vector<double>();
-		axis = vector<double>();
+	void setBoundingBox(float min, float max) {
+		orig = vector<float>();
+		axis = vector<float>();
 		for (size_t i = 0; i < dim; ++i) {
 			orig.push_back(min);
 			axis.push_back(max - min);

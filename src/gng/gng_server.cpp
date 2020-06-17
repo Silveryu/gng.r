@@ -85,25 +85,25 @@ void GNGServer::init(GNGConfiguration configuration,
 			== GNGConfiguration::DatasetSampling) {
 		DBG_PTR(m_logger,11, "GNGServer::Constructing Normal Sampling Prob Dataset");
 		this->gngDataset = std::auto_ptr<GNGDataset>(
-				new GNGDatasetSimple<double>(&database_mutex,
+				new GNGDatasetSimple<float>(&database_mutex,
 						current_configuration.dim, true /* store_extra */,
-						GNGDatasetSimple<double>::Sampling, current_configuration.seed,  m_logger));
+						GNGDatasetSimple<float>::Sampling, current_configuration.seed,  m_logger));
 	} else if (current_configuration.datasetType
 			== GNGConfiguration::DatasetSamplingProb) {
 		//Add probability to layout
 		DBG_PTR(m_logger,11, "GNGServer::Constructing Sampling Prob Dataset");
 		this->gngDataset = std::auto_ptr<GNGDataset>(
-				new GNGDatasetSimple<double>(&database_mutex,
+				new GNGDatasetSimple<float>(&database_mutex,
 						current_configuration.dim, true /* store_extra */,
-						GNGDatasetSimple<double>::SamplingProbability, current_configuration.seed, 
+						GNGDatasetSimple<float>::SamplingProbability, current_configuration.seed,
 						m_logger));
 	} else if (current_configuration.datasetType
 			== GNGConfiguration::DatasetSeq) {
 		DBG_PTR(m_logger,11, "GNGServer::Constructing Normal Seq Dataset");
 		this->gngDataset = std::auto_ptr<GNGDataset>(
-				new GNGDatasetSimple<double>(&database_mutex,
+				new GNGDatasetSimple<float>(&database_mutex,
 						current_configuration.dim, true /* store_extra */, 
-						GNGDatasetSimple<double>::Sequential, current_configuration.seed, m_logger));
+						GNGDatasetSimple<float>::Sequential, current_configuration.seed, m_logger));
 	} else {
 		DBG_PTR(m_logger,11, "GNGServer::Not recognized dataset");
 		throw BasicException(
@@ -152,6 +152,7 @@ void GNGServer::init(GNGConfiguration configuration,
 					current_configuration.dim,
 					current_configuration.uniformgrid_optimization,
 					current_configuration.ann_optimization,
+					current_configuration.ann_approach,
 					current_configuration.lazyheap_optimization,
 					current_configuration.experimental_utility_option,
 					current_configuration.experimental_utility_k, 
@@ -185,7 +186,7 @@ bool GNGServer::isRunning() const {
 	return gngAlgorithm->isRunning();
 }
 
-double GNGServer::nodeDistance(int id1, int id2) const {
+float GNGServer::nodeDistance(int id1, int id2) const {
 	if (gngAlgorithm->isRunning()) {
 		CERR("nodeDistance: Please pause algorithm before calling nodeDistance function\n");
 		return -1.0;
@@ -250,8 +251,8 @@ void GNGServer::exportToGraphML(std::string filename) {
 }
 
 ///Insert examples
-void GNGServer::insertExamples(double * positions, double * extra,
-		double * probability, unsigned int count, unsigned int dim) {
+void GNGServer::insertExamples(float * positions, float * extra,
+		float * probability, unsigned int count, unsigned int dim) {
 	gmum::scoped_lock<GNGDataset> lock(gngDataset.get());
 
 	if (dim != current_configuration.dim) {
@@ -273,7 +274,7 @@ unsigned int GNGServer::getNumberNodes() const {
 
 
 
-double GNGServer::getMeanError() {
+float GNGServer::getMeanError() {
 	return gngAlgorithm->getMeanError();
 }
 
@@ -281,10 +282,10 @@ bool GNGServer::hasStarted() const{
 	return this->getCurrentIteration() != 0;
 }
 
-vector<double> GNGServer::getMeanErrorStatistics() {
-	vector<pair<double, double> > errors =
+vector<float> GNGServer::getMeanErrorStatistics() {
+	vector<pair<float, float> > errors =
 			gngAlgorithm->getMeanErrorStatistics();
-	vector<double> out;
+	vector<float> out;
 	out.reserve(errors.size());
 	for (unsigned i = 0; i < errors.size(); ++i) {
 		out.push_back(errors[i].second);
@@ -364,7 +365,7 @@ int GNGServer::Rpredict(Rcpp::NumericVector & r_ex) {
      CERR("Wrong example dimensionality. Note that C++ method accepts only vectors, not matrix, please use S4 predict method instead\n");
      return -1;
   }else{
-	  return 1+gngAlgorithm->predict(std::vector<double>(r_ex.begin(), r_ex.end()) );
+	  return 1+gngAlgorithm->predict(std::vector<float>(r_ex.begin(), r_ex.end()) );
   }
 }
 
@@ -376,7 +377,7 @@ Rcpp::NumericVector GNGServer::RgetClustering() {
 }
 
 Rcpp::NumericVector GNGServer::RgetErrorStatistics() {
-	vector<double> x = getMeanErrorStatistics();
+	vector<float> x = getMeanErrorStatistics();
 	return NumericVector(x.begin(), x.end());
 }
 
@@ -386,13 +387,13 @@ void GNGServer::RinsertExamples(Rcpp::NumericMatrix & r_points){
 
 void GNGServer::RinsertLabeledExamples(Rcpp::NumericMatrix & r_points,
 		Rcpp::NumericVector r_extra ) {
-	std::vector<double> extra(r_extra.begin(), r_extra.end());
+	std::vector<float> extra(r_extra.begin(), r_extra.end());
 	arma::mat * points = new arma::mat(r_points.begin(), r_points.nrow(), r_points.ncol(), false);
 
 
-	arma::Row<double> mean_colwise = arma::mean(*points, 0 /*dim*/);
-	arma::Row<double> std_colwise = arma::stddev(*points, 0 /*dim*/);
-	arma::Row<double> diff_std = arma::abs(std_colwise - 1.0);
+	arma::Row<float> mean_colwise = arma::mean(*points, 0 /*dim*/);
+	arma::Row<float> std_colwise = arma::stddev(*points, 0 /*dim*/);
+	arma::Row<float> diff_std = arma::abs(std_colwise - 1.0);
 	float max_diff_std = arma::max(diff_std), max_mean = arma::max(mean_colwise);
 	if(max_diff_std > 0.1 || max_mean > 0.1) {
 		CERR("it is advised to scale data for optimal algorithm behavior to mean=1 std=0 \n");
@@ -400,9 +401,9 @@ void GNGServer::RinsertLabeledExamples(Rcpp::NumericMatrix & r_points,
 
 	//Check if data fits in bounding box
 	if(current_configuration.uniformgrid_optimization) {
-		arma::Row<double> max_colwise = arma::max(*points, 0 /*dim*/);
-		arma::Row<double> min_colwise = arma::min(*points, 0 /*dim*/);
-		arma::Row<double> diff = max_colwise - min_colwise;
+		arma::Row<float> max_colwise = arma::max(*points, 0 /*dim*/);
+		arma::Row<float> min_colwise = arma::min(*points, 0 /*dim*/);
+		arma::Row<float> diff = max_colwise - min_colwise;
 		float max = arma::max(diff), min = arma::min(diff);
 
 		for(size_t i=0;i<current_configuration.dim; ++i) {

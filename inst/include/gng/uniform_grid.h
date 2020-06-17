@@ -27,39 +27,39 @@ class UniformGrid {
 	typedef VectorContainer NodeArray;
 
 public:
-	UniformGrid(double * origin, int *dim, int gng_dim, double m_grow_factor =
-			1.5, double m_density_threshold = 2.0,
-			double m_density_threshold_min = 0.4,
+	UniformGrid(float * origin, int *dim, int gng_dim, float m_grow_factor =
+			1.5, float m_density_threshold = 2.0,
+			float m_density_threshold_min = 0.4,
 			boost::shared_ptr<Logger> logger = boost::shared_ptr<Logger>());
 
-	UniformGrid(double * origin, double *axis, double l, int gng_dim,
-			double m_grow_factor = 1.5, double m_density_threshold = 2.0,
-			double m_density_threshold_min = 0.4,
+	UniformGrid(float * origin, float *axis, float l, int gng_dim,
+			float m_grow_factor = 1.5, float m_density_threshold = 2.0,
+			float m_density_threshold_min = 0.4,
 			boost::shared_ptr<Logger> logger = boost::shared_ptr<Logger>());
 
-	vector<T> findNearest(const double *p, int n = 2);
+	vector<T> findNearest(const float *p, int n = 2);
 
 	// Calculates new size given growth factor
-	long int calculate_new_size(double *origin, double *axis, double l);
+	long int calculate_new_size(float *origin, float *axis, float l);
 
-	void purge(double *origin, int* dim, double l);
+	void purge(float *origin, int* dim, float l);
 
-	void purge(double *origin, double *axis, double l);
+	void purge(float *origin, float *axis, float l);
 
-	void new_l(double l);
+	void new_l(float l);
 
-	int insert(double *p, T x);
+	int insert(float *p, T x);
 
-	bool remove(double *p);
+	bool remove(float *p);
 
 	// Calculates if growing the grid will payoff
 	bool check_grow();
 
-	double getCellLength() const {
+	float getCellLength() const {
 		return m_l;
 	}
 
-	double getDensity() const {
+	float getDensity() const {
 		return m_density;
 	}
 
@@ -75,7 +75,7 @@ public:
 		return m_dim[axis];
 	}
 
-	void setDistFunction(double (*dist_fnc)(T, double*)) {
+	void setDistFunction(float (*dist_fnc)(T, float*)) {
 		m_dist_fnc = dist_fnc;
 	}
 
@@ -83,15 +83,15 @@ public:
 
 private:
 	// Check if search was successful
-	bool searchSuccessful(double min_dist = -1);
+	bool searchSuccessful(float min_dist = -1);
 
-	void scanCell(int k, double* query);
+	void scanCell(int k, float* query);
 
 	void crawl(int current_dim, int fixed_dim);
 
 	bool scanCorners();
 
-	T find(double *p);
+	T find(float *p);
 
 private:
 	/*** Maximum size pass which UG won't grow */
@@ -101,30 +101,30 @@ private:
 
 	//global variables for search query
 	int s_found_cells[4];
-	double s_found_cells_dist[4];
+	float s_found_cells_dist[4];
 	int s_search_query;
 
 	int *s_center;
 	int s_radius;
 	int *s_pos;
-	double *s_query;
+	float *s_query;
 
-	double (*m_dist_fnc)(T, double*); //distance function;
+	float (*m_dist_fnc)(T, float*); //distance function;
 
-	double m_l;
-	double m_h;
+	float m_l;
+	float m_h;
 
-	double m_density;
-	double m_density_threshold;
-	double m_density_threshold_min;
-	double m_grow_factor;
+	float m_density;
+	float m_density_threshold;
+	float m_density_threshold_min;
+	float m_grow_factor;
 
 	int neighbourhood_size; //=3^d
 
 	int gng_dim;
 
 	//TODO: erase GNG_MAX_DIM
-	double m_axis[GNG_MAX_DIM];
+	float m_axis[GNG_MAX_DIM];
 
 	int m_nodes;
 
@@ -137,11 +137,11 @@ private:
 	vector<int> m_neigh;
 
 	//TODO: erase GNG_MAX_DIM
-	double m_origin[GNG_MAX_DIM];
+	float m_origin[GNG_MAX_DIM];
 
 	int getIndex(int *p) {
 		int value = p[0];
-		double mul = m_dim[0];
+		float mul = m_dim[0];
 		for (int i = 1; i < this->gng_dim; ++i) {
 			value += p[i] * mul;
 			mul *= m_dim[i];
@@ -149,7 +149,7 @@ private:
 
 		return value;
 	}
-	int * calculateCell(const double *p) {
+	int * calculateCell(const float *p) {
 		//int * m_tmp_int = new int[this->gng_dim];
 		for (int i = 0; i < this->gng_dim; ++i) {
 			m_tmp_int[i] = (int) ((p[i] - m_origin[i]) / m_l);
@@ -161,11 +161,11 @@ private:
 		return (x) >= 0 && (x) < m_grid.size();
 	}
 
-	bool isZero(double x) { 
+	bool isZero(float x) {
 		return x > -EPS && x < EPS;
 	}
 
-	unsigned int calculate_cell_side(double axis, double l, int old_dim) {
+	unsigned int calculate_cell_side(float axis, float l, int old_dim) {
 		return max(old_dim + 1, (int) ((axis) / (l)) + 1);
 	}
 };

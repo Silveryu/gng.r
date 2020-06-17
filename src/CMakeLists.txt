@@ -15,7 +15,7 @@ if(APPLE)
     set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 endif()
 
-add_library(gmum.r SHARED ${GMUMR_SOURCES})
+add_library(gmum.r SHARED ${GMUMR_SOURCES} ../inst/include/hnsw/detail/CustomVec.h)
 target_link_libraries(gmum.r ${R_LIBS})
 set_target_properties(gmum.r PROPERTIES PREFIX "")
 INSTALL(TARGETS gmum.r DESTINATION ${SRC_DIR})
