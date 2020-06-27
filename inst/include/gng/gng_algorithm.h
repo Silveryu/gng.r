@@ -65,7 +65,6 @@ public:
 			int max_age = 200, float alpha = 0.95, float betha = 0.9995,
 			float lambda = 200, float eps_w = 0.05, float eps_n = 0.0006,
 			int dim = 3, bool uniformgrid_optimization = true, bool ann_optimization = true,
-			int ann_approach = GNGConfiguration::LSH,
 			bool lazyheap_optimization = true, unsigned int utility_option =
 					GNGConfiguration::UtilityOff, float utility_k = -1,
             int max_iter = -1, int seed=777,
@@ -112,7 +111,6 @@ public:
 
 	float m_utility_k;
 	int m_utility_option;
-    int m_ann_approach;
 	float m_alpha, m_betha;
 	float * m_betha_powers;
 	int m_betha_powers_to_n_length;
@@ -132,14 +130,7 @@ public:
 	GNGGraph & m_g;
 	GNGDataset * g_db;
 	UniformGrid<std::vector<Node>, Node, int> * ug;
-
-
     hnsw::hnsw_index<long, std::vector<float>, hnsw::l2_square_distance_t>* ann;
-    //hnsw::hnsw_index<long, std::vector<float>,  hnsw::l2_square_distance_t>* ann;
-
-    //faiss::Index* ann;
-
-    //faiss::IndexHNSWFlat* ann;
 
     GNGLazyErrorHeap errorHeap;
 
