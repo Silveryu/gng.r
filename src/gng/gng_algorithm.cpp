@@ -89,13 +89,14 @@ GNGGraph* GNGGraphAccessHack::pool = 0;
 GNGAlgorithm::GNGAlgorithm(GNGGraph * g, GNGDataset* db,
 		float * boundingbox_origin, float * boundingbox_axis, float l,
 		int max_nodes, int max_age, float alpha, float betha, float lambda,
-		float eps_w, float eps_n, int dim, bool uniformgrid_optimization, bool ann_optimization, bool lazyheap_optimization,
+		float eps_w, float eps_n, int dim, bool uniformgrid_optimization, bool ann_optimization,
+		int ann_approach, bool lazyheap_optimization,
 		unsigned int utility_option, float utility_k, int max_iter, int seed, boost::shared_ptr<Logger> logger) :
 		m_g(*g), g_db(db), c(0), s(0), m_max_nodes(max_nodes), m_max_age(
 				max_age), m_alpha(alpha), m_betha(betha), m_lambda(lambda), m_eps_w(
 				eps_w), m_eps_n(eps_n), m_density_threshold(0.1), m_grow_rate(
 				1.5), errorHeap(), dim(dim), m_toggle_uniformgrid(
-				uniformgrid_optimization), m_toggle_ann(ann_optimization),
+				uniformgrid_optimization), m_toggle_ann(ann_optimization), m_ann_approach(ann_approach),
 				m_toggle_lazyheap(lazyheap_optimization),  m_utility_option(
 				utility_option), m_mean_error(1000), m_utility_k(utility_k), 
                 max_iter(max_iter), m_logger(
@@ -130,7 +131,7 @@ GNGAlgorithm::GNGAlgorithm(GNGGraph * g, GNGDataset* db,
 
 	    ann = new hnsw::hnsw_index<long , std::vector<float>, hnsw::l2_square_distance_t>();
 
-	    //L2Space l2space(dim);
+        //L2Space l2space(dim);
         int M = 32;
         int efConstruction = 36;
 
@@ -149,16 +150,7 @@ GNGAlgorithm::GNGAlgorithm(GNGGraph * g, GNGDataset* db,
         for(size_t i=0; i<maximum_index+1; ++i) {
             cout << "error" << endl;
             if (m_g.existsNode(i)) {
-                long ids[] = {m_g[i].nr};
-
-
-
-
-               //does it know dim?
-
-               ann->insert(m_g[i].nr, std::vector<float>(m_g[i].position, m_g[i].position + dim));
-                //ann->add_with_ids(1, m_g[i].position, ids);
-                //ann->insert(m_g[i].nr, std::vector<float>(m_g[i].position, m_g[i].position + dim));
+                 ann->insert(m_g[i].nr, std::vector<float>(m_g[i].position, m_g[i].position + dim));
             }
         }
 
@@ -391,8 +383,11 @@ std::pair<float, int> GNGAlgorithm::adapt(const float * ex,
         ug->remove(nearest_0->position);
     }
 	else if(m_toggle_ann){
-        ann->remove(nearest_0->nr);
-    }
+
+	    if(m_ann_approach == GNGConfiguration::ONLINE_HNSW){
+            ann->remove(nearest_0->nr);
+        }
+	}
 	for (int i = 0; i < this->dim; ++i)
 		nearest_0->position[i] += m_eps_w * (ex[i] - nearest_0->position[i]);
 
@@ -405,7 +400,15 @@ std::pair<float, int> GNGAlgorithm::adapt(const float * ex,
     }
 	else if(m_toggle_ann){
 
-	    ann->insert(nearest_0->nr, vector<float>{nearest_0->position,nearest_0->position + dim});
+	    switch(m_ann_approach){
+	        case GNGConfiguration::ONLINE_HNSW:
+                ann->insert(nearest_0->nr, vector<float>{nearest_0->position,nearest_0->position + dim});
+                break;
+	        case GNGConfiguration::ONLINE_HNSW_MV:
+                ann->move(nearest_0->nr, vector<float>{nearest_0->position,nearest_0->position + dim});
+                break;
+        }
+
 	}
 
 	if (nearest_0->edgesCount) {
@@ -415,7 +418,10 @@ std::pair<float, int> GNGAlgorithm::adapt(const float * ex,
                 ug->remove(m_g[(edg)->nr].position);
             }
 			else if(m_toggle_ann){
-                ann->remove((edg)->nr);
+
+			    if(m_ann_approach == GNGConfiguration::ONLINE_HNSW) {
+                    ann->remove((edg)->nr);
+                }
 			}
 
 			for (int i = 0; i < this->dim; ++i) { //param accounting
@@ -433,9 +439,12 @@ std::pair<float, int> GNGAlgorithm::adapt(const float * ex,
                 ug->insert(m_g[(edg)->nr].position, (edg)->nr);
             }
 			else if(m_toggle_ann) {
-
-                ann->insert((edg)->nr, vector<float>(m_g[(edg)->nr].position, m_g[(edg)->nr].position + dim));
-
+			    switch(m_ann_approach){
+			        case GNGConfiguration::ONLINE_HNSW:
+                        ann->insert((edg)->nr, vector<float>(m_g[(edg)->nr].position, m_g[(edg)->nr].position + dim));
+			        case GNGConfiguration::ONLINE_HNSW_MV:
+                        ann->move((edg)->nr, vector<float>{m_g[(edg)->nr].position,m_g[(edg)->nr].position + dim});
+                }
             }
 		}
 	}
@@ -487,10 +496,8 @@ std::pair<float, int> GNGAlgorithm::adapt(const float * ex,
                     ug->remove(m_g[nr].position);
                 }
                 else if(m_toggle_ann){
-
-
+                    cout << "remove " << endl;
                     ann->remove(nr);
-
                 }
 
 				DBG_PTR(m_logger, 8,
@@ -512,6 +519,7 @@ std::pair<float, int> GNGAlgorithm::adapt(const float * ex,
                     ug->remove(m_g[nearest_0->nr].position);
                 }
 				else if(m_toggle_ann) {
+                    cout << "remove " << endl;
 
                     ann->remove(nearest_0->nr);
                 }
