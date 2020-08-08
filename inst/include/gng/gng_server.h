@@ -55,7 +55,7 @@ public:
 		this->m_logger->verbosity = verbosity;
 	}
 
-	float nodeDistance(int id1, int id2) const;
+	double nodeDistance(int id1, int id2) const;
 
 	void save(std::string filename);
 
@@ -65,16 +65,16 @@ public:
 	void exportToGraphML(std::string filename);
 
 	///Insert examples
-	void insertExamples(float * positions, float * extra,
-			float * probability, unsigned int count, unsigned int dim);
+	void insertExamples(double * positions, double * extra,
+			double * probability, unsigned int count, unsigned int dim);
 
 
     unsigned getDatasetSize() const;
 	unsigned getGNGErrorIndex() const;
 	bool isRunning() const;
-	vector<float> getMeanErrorStatistics();
+	vector<double> getMeanErrorStatistics();
 	unsigned int getNumberNodes() const;
-	float getMeanError();
+	double getMeanError();
 	GNGConfiguration getConfiguration();
 	GNGAlgorithm & getAlgorithm();
 	GNGGraph & getGraph();
@@ -82,10 +82,9 @@ public:
 
 	~GNGServer();
 
-	//Constructor needed for RCPPInterface
-    GNGServer(GNGConfiguration * configuration);
-
 #ifdef RCPP_INTERFACE
+	//Constructor needed for RCPPInterface
+	GNGServer(GNGConfiguration * configuration);
 
 	///Moderately slow function returning node descriptors
 	Rcpp::List getNode(int index);
@@ -126,9 +125,9 @@ private:
 
 	GNGConfiguration current_configuration;
 
-	std::unique_ptr<gmum::GNGAlgorithm> gngAlgorithm;
-	std::unique_ptr<gmum::GNGGraph> gngGraph;
-	std::unique_ptr<gmum::GNGDataset> gngDataset;
+	std::auto_ptr<gmum::GNGAlgorithm> gngAlgorithm;
+	std::auto_ptr<gmum::GNGGraph> gngGraph;
+	std::auto_ptr<gmum::GNGDataset> gngDataset;
 
 	//Called from constructors
 	void init(GNGConfiguration configuration, std::istream * input_graph = 0);

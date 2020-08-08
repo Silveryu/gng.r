@@ -164,17 +164,6 @@ public:
         levels[node_level].insert(key);
     }
 
-    void move(const key_t &key, vector_t &&vector){
-
-        auto node_it = nodes.find(key);
-
-        if (node_it == nodes.end()) {
-            return;
-        }
-        //node_it->second.vector = vector;
-        node_it.value().vector = vector;
-
-    }
 
     void remove(const key_t &key) {
         auto node_it = nodes.find(key);

@@ -33,7 +33,7 @@ TEST(GraphTests, BasicGraphTest) {
 	ASSERT_EQ(g.existsNode(0), false);
 	ASSERT_EQ(g.get_number_nodes(), 0);
 
-	float x[6] = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6 };
+	double x[6] = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6 };
 
 	//Just fill in
 	for (int i = 0; i < N_start; ++i) {
@@ -167,13 +167,13 @@ TEST(DatabaseTests, BasicDatasetTest) {
 	unsigned int dim = 6;
 	gmum::recursive_mutex phase_2_lock;
 	unsigned int num_examples = 100, meta_data_dim = 1;
-	GNGDatasetSimple<float> dataset2(&phase_2_lock, dim,
+	GNGDatasetSimple<double> dataset2(&phase_2_lock, dim,
 			true /* store_extra */,
-			GNGDatasetSimple<float>::SamplingProbability, 777, logger);
+			GNGDatasetSimple<double>::SamplingProbability, 777, logger);
 
-	float * x = new float[num_examples * (dim)];
-	float * labels = new float[num_examples];
-	float * probabilities = new float[num_examples];
+	double * x = new double[num_examples * (dim)];
+	double * labels = new double[num_examples];
+	double * probabilities = new double[num_examples];
 
 
 	for (int i = 0; i < num_examples; ++i) {

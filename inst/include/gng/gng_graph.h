@@ -66,15 +66,15 @@ public:
 
 	virtual unsigned int get_number_nodes() const = 0;
 
-	virtual float get_dist(int a, int b) = 0;
+	virtual double get_dist(int a, int b) = 0;
 
-	virtual float get_euclidean_dist(const float * pos_1,
-			const float * pos_2) const= 0;
+	virtual double get_euclidean_dist(const double * pos_1,
+			const double * pos_2) const= 0;
 
-	virtual float get_dist(const float *pos_a, const float *pos_b) const = 0;
+	virtual double get_dist(const double *pos_a, const double *pos_b) const = 0;
 
 	/* Initialize node with position attribute */
-	virtual int newNode(const float *position) = 0;
+	virtual int newNode(const double *position) = 0;
 
 	virtual bool deleteNode(int x) = 0;
 
@@ -116,7 +116,7 @@ public:
 
 	Node & operator[](int i);
 
-	int newNode(const float *position);
+	int newNode(const double *position);
 	bool deleteNode(int x);
 	EdgeIterator removeUDEdge(int a, int b);
 	void addUDEdge(int a, int b);
@@ -125,13 +125,13 @@ public:
 	std::string reportPool();
 
 	virtual int get_dim() const;
-	float get_dist(int a, int b);
-	float get_euclidean_dist(const float *pos_a, const float *pos_b) const;
-	float get_dist(const float *pos_a, const float *pos_b) const;
+	double get_dist(int a, int b);
+	double get_euclidean_dist(const double *pos_a, const double *pos_b) const;
+	double get_dist(const double *pos_a, const double *pos_b) const;
 	virtual unsigned int get_maximum_index() const;
 	virtual bool existsNode(unsigned i) const;
 	bool isEdge(int a, int b) const;
-	const float *getPosition(int nr) const;
+	const double *getPosition(int nr) const;
 	unsigned int get_number_nodes() const;
 
 	virtual void lock();
@@ -149,7 +149,7 @@ private:
 
 	std::vector<Node> g;
 	std::vector<bool> occupied;
-	std::vector<float> positions; //as continuous array for speed/caching purposes, could be vector
+	std::vector<double> positions; //as continuous array for speed/caching purposes, could be vector
 
 	int maximum_index;
 	unsigned int nodes, gng_dim;
