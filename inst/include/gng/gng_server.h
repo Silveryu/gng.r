@@ -79,6 +79,14 @@ public:
 	GNGAlgorithm & getAlgorithm();
 	GNGGraph & getGraph();
 	GNGDataset & getDatabase();
+	long getNInsertions();
+	long getNMoves();
+	long getNRemovals();
+	long getNSearches();
+    double getKey1Recall();
+    double getKey2Recall();
+    double getConstructionRecall(int nQueries);
+    double getHNSWAvgPathLength(int nSamples);
 
 	~GNGServer();
 

@@ -33,8 +33,6 @@
 
 /* Common Block Declarations */
 
-long verbosity;
-
 # define PRIMAL_OPTIMAL      1
 # define DUAL_OPTIMAL        2
 # define MAXITER_EXCEEDED    3

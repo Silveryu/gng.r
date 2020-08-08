@@ -5,8 +5,6 @@
 
 #include "gtest/gtest.h"
 
-#include "matplotlibcpp.h"
-
 #include <algorithm>
 #include <utility>
 #include <vector>
@@ -19,6 +17,7 @@ using namespace std::chrono;
 
 enum algorithms{
     ONLINE_HNSW,
+    ONLINE_HSNW_MV,
     UNIFORM_GRID,
     LINEAR
 };
@@ -55,7 +54,6 @@ double* set_up(unsigned int dim = 10, unsigned int nExamples = 100){
 // Adapted from R code to allow C++ profiling
 void server(GNGServer& gng, double * vect, unsigned int dim, unsigned int nExamples,
             double min_relative_diff = 1e-3){
-
     const GNGConfiguration config = gng.getConfiguration();
 
     int iter = 0;
@@ -67,7 +65,11 @@ void server(GNGServer& gng, double * vect, unsigned int dim, unsigned int nExamp
     int patience = initial_patience;
     int max_iter = config.max_iter;
 
+    cout << "insertExamples" << endl;
+
     gng.insertExamples(vect, nullptr, nullptr, nExamples, dim);
+
+    cout << "run" << endl;
     gng.run();
 
     try {
@@ -123,12 +125,13 @@ void server(GNGServer& gng, double * vect, unsigned int dim, unsigned int nExamp
 
 
 static void TestBenchmark(benchmark::State& state, algorithms alg) {
-    unsigned int dim = 100;
+    unsigned int dim = 1000;
     unsigned int nExamples = 1000;
     //min iters is 100
     int max_iter = 100;
 
     double* vect = set_up(dim, nExamples);
+
     GNGConfiguration config = GNGConfiguration::getDefaultConfiguration();
     config.datasetType = GNGConfiguration::DatasetSeq;
 
@@ -136,6 +139,16 @@ static void TestBenchmark(benchmark::State& state, algorithms alg) {
         case ONLINE_HNSW:
             config.uniformgrid_optimization = false;
             config.ann_optimization = true;
+            config.ann_approach = GNGConfiguration::ONLINE_HNSW;
+            break;
+        case ONLINE_HSNW_MV:
+            config.uniformgrid_optimization = false;
+            config.ann_optimization = true;
+            config.ann_approach = GNGConfiguration::ONLINE_HNSW_MV;
+            config.nsw = false;
+            config.efSearch = 32;
+            config.efConstruction = 32;
+            config.max_links = 36;
             break;
         case UNIFORM_GRID:
             config.uniformgrid_optimization = true;
@@ -150,11 +163,12 @@ static void TestBenchmark(benchmark::State& state, algorithms alg) {
     // max iter ensures it trains in offline mode
     config.max_iter = max_iter;
     config.dim = dim;
+    config.verbosity = 0;
 
     GNGServer gng(&config);
 
     for (auto _ : state) {
-        cout << "staritng "<< endl;
+        cout << "starting "<< endl;
         server(gng, vect, dim, nExamples);
         cout << "endng "<< endl;
 
@@ -165,7 +179,7 @@ static void TestBenchmark(benchmark::State& state, algorithms alg) {
 }
 
 
-BENCHMARK_CAPTURE(TestBenchmark, online_hnsw, algorithms::ONLINE_HNSW)->Unit(benchmark::kMillisecond)->Iterations(1);
+BENCHMARK_CAPTURE(TestBenchmark, online_hnsw, algorithms::ONLINE_HSNW_MV)->Unit(benchmark::kMillisecond)->Iterations(1);
 
 BENCHMARK_CAPTURE(TestBenchmark, linear, algorithms::LINEAR)->Unit(benchmark::kMillisecond)->Iterations(1);
 
