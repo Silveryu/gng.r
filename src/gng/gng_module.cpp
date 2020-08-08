@@ -35,7 +35,6 @@ RCPP_MODULE(gng_module){
 	.constructor()
 
 	.field(".uniformgrid_optimization", &GNGConfiguration::uniformgrid_optimization, "Uniform grid optimization" )
-	.field(".ann_optimization", &GNGConfiguration::ann_optimization, "Approximate NN optimization")
 	.field(".lazyheap_optimization", &GNGConfiguration::lazyheap_optimization )
 
 	.field("alpha", &GNGConfiguration::alpha, "Alpha coefficient. "

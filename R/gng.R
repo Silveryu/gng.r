@@ -43,11 +43,6 @@ gng.type.utility<- function(k=1.3){
   c(1, k)
 }
 
-gng.type.approximate<- function(ef=100){
-  c(3, ef)
-}
-
-
 .gng.dataset.bagging.prob <- 3
 .gng.dataset.bagging <- 2
 .gng.dataset.sequential <-1
@@ -534,8 +529,6 @@ insertExamples <- NULL
   
   if(type[1] == gng.type.optimized()[1]){
     config$.uniformgrid_optimization = TRUE
-    config$.ann_optimization = FALSE
-
     config$.lazyheap_optimization = TRUE  
     config$.set_bounding_box(type[2], type[3])
     
@@ -544,14 +537,8 @@ insertExamples <- NULL
         stop(gmum.error(GMUM_WRONG_PARAMS, "Passed incorrect parameters. The dataset is not in the defined range"))
       }
     }
-  }
-  else if(type[1] == gng.type.approximate()[1]){
-    config$.ann_optimization = TRUE
-    config$.uniformgrid_optimization = FALSE
-    config$.lazyheap_optimization = TRUE
     
   }else{
-    config$.ann_optimization = FALSE
     config$.uniformgrid_optimization = FALSE
     config$.lazyheap_optimization = FALSE
   }
@@ -734,31 +721,7 @@ OptimizedGNG <- function(x=NULL, labels=c(),
               eps.n=eps.n, eps.w=eps.w, max.edge.age=max.edge.age, type=gng.type.optimized(minimum=value.range[1], maximum=value.range[2]), train.online=train.online, max.iter=max.iter, dim=dim, min.improvement=min.improvement, lambda=lambda, verbosity=verbosity, seed=seed)
   assign("call", call, gng)
   gng
-}
-
-ApproximateGNG <- function(x=NULL, labels=c(),
-beta=0.99,
-alpha=0.5,
-max.nodes=1000,
-eps.n=0.0006,
-eps.w= 0.05,
-max.edge.age = 200,
-train.online=FALSE,
-max.iter=200,
-dim=-1,
-min.improvement=1e-3,
-lambda=200,
-verbosity=0,
-seed=-1,
-ef = 102
-){
-
-  call <- match.call(expand.dots = TRUE)
-  gng <- .GNG(x=x, labels=labels, beta=beta, alpha=alpha, max.nodes=max.nodes,
-  eps.n=eps.n, eps.w=eps.w, max.edge.age=max.edge.age, type=gng.type.approximate(ef), train.online=train.online, max.iter=max.iter, dim=dim, min.improvement=min.improvement, lambda=lambda, verbosity=verbosity, seed=seed)
-  assign("call", call, gng)
-  gng
-}
+}    
 
 predictComponent <- function(object, x){
   tryCatch(if(is.null(object$components.membership)){
