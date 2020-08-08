@@ -25,7 +25,7 @@
 using namespace std;
 typedef vector<int> VI;
 #define FOR(x, b, e) for(size_t x=b; x<=(e); ++x)
-#define FORD(x, b, e) for(size_t x=b; x>=(e); --x)
+#define FORD(x, b, e) for(size_t x=b; x>=(e); ––x)
 #define REP(x, n) for(size_t x=0; x<(n); ++x)
 #define VAR(v,n) typeof(n) v=(n)
 #define SIZE(x) (int)(x).size()
@@ -128,14 +128,14 @@ static int __int_rnd(int min, int max) {
   return (ed_c_rand() % (max - min + 1) + min);
 }
 
-static float __float_rnd(float min, float max) {
-  return min + (max - min) * ((float) ed_c_rand()) / RAND_MAX;
+static double __double_rnd(double min, double max) {
+  return min + (max - min) * ((double) ed_c_rand()) / RAND_MAX;
 }
 
-static void _write_bin(ostream & out, float v) {
+static void _write_bin(ostream & out, double v) {
   if (isCpuLittleEndian ^ isFileLittleEndian) {
     // Switch between the two
-    char data[8], *pDouble = (char*) (float*) (&v);
+    char data[8], *pDouble = (char*) (double*) (&v);
     for (int i = 0; i < 8; ++i) {
       data[i] = pDouble[7 - i];
     }
@@ -144,8 +144,8 @@ static void _write_bin(ostream & out, float v) {
     out.write((char*) (&v), 8);
 }
 
-static inline void _write_bin_vect(ostream & out, vector<float> & v) {
-  _write_bin(out, (float) v.size());
+static inline void _write_bin_vect(ostream & out, vector<double> & v) {
+  _write_bin(out, (double) v.size());
   // TODO: remove
   REPORT(v.size());
   for (size_t i = 0; i < v.size(); ++i) {
@@ -153,9 +153,9 @@ static inline void _write_bin_vect(ostream & out, vector<float> & v) {
   }
 }
 
-static inline float _load_bin(istream & in) {
+static inline double _load_bin(istream & in) {
   char data[8];
-  float res;
+  double res;
   in.read(data, 8);
   if (isCpuLittleEndian ^ isFileLittleEndian) {
     char data_load[8];
@@ -170,9 +170,9 @@ static inline float _load_bin(istream & in) {
   return res;
 }
 
-static inline vector<float> _load_bin_vector(istream & in) {
+static inline vector<double> _load_bin_vector(istream & in) {
   int N = (int) _load_bin(in);
-  vector<float> x;
+  vector<double> x;
   x.reserve(N);
   REPORT(N);
   for (int i = 0; i < N; ++i) {

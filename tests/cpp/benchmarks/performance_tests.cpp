@@ -31,38 +31,38 @@ void vec_print(std::vector<T> const &v)
     }
 }
 
-float random_float(float min, float max) {
-    return min + (max - min) * ((float) rand()) / RAND_MAX;
+double random_double(double min, double max) {
+    return min + (max - min) * ((double) rand()) / RAND_MAX;
 }
 
-float* set_up(unsigned int dim = 100, unsigned int nExamples = 1000){
+double* set_up(unsigned int dim = 10, unsigned int nExamples = 100){
 
     cerr << "Allocating " << dim * nExamples << endl << flush;
     // creating random samples
-    float* vect = new float[(dim) * nExamples];
+    double* vect = new double[(dim) * nExamples];
 
     for (int i = 0; i < nExamples; ++i) {
         for (int j = 0; j <= dim; ++j)
             if (j == 0)
                 vect[j + (i) * (dim)] = 0.0;
             else if (j < dim)
-                vect[j + (i) * (dim)] = random_float(0, 1);
+                vect[j + (i) * (dim)] = random_double(0, 1);
     }
     return vect;
 }
 
 
 // Adapted from R code to allow C++ profiling
-void server(GNGServer& gng, float * vect, unsigned int dim, unsigned int nExamples,
-            float min_relative_diff = 1e-3){
+void server(GNGServer& gng, double * vect, unsigned int dim, unsigned int nExamples,
+            double min_relative_diff = 1e-3){
 
     const GNGConfiguration config = gng.getConfiguration();
 
     int iter = 0;
     int previous_iter = -1;
-    float best_previous_error = -1;
+    double best_previous_error = -1;
     int error_index = -1;
-    float current_best = 1e10;
+    double current_best = 1e10;
     int initial_patience = 3;
     int patience = initial_patience;
     int max_iter = config.max_iter;
@@ -81,7 +81,7 @@ void server(GNGServer& gng, float * vect, unsigned int dim, unsigned int nExampl
                 cout << "Iteration " << iter << endl;
             }
 
-            vector<float> error = gng.getMeanErrorStatistics();
+            vector<double> error = gng.getMeanErrorStatistics();
             if(error.size() > 5 ) {
 
                 best_previous_error = *std::min_element(std::end(error) - 5, std::end(error));
@@ -92,7 +92,7 @@ void server(GNGServer& gng, float * vect, unsigned int dim, unsigned int nExampl
                     if (patience <= 0) {
                         cout << "Best error during training: " << current_best;
                         cout << "Best error in 5 previous iterations " << best_previous_error;
-                        vector<float> sample(std::end(error) - 5, std::end(error));
+                        vector<double> sample(std::end(error) - 5, std::end(error));
                         vec_print(sample);
                     }
                 } else {
@@ -124,11 +124,11 @@ void server(GNGServer& gng, float * vect, unsigned int dim, unsigned int nExampl
 
 static void TestBenchmark(benchmark::State& state, algorithms alg) {
     unsigned int dim = 100;
-    unsigned int nExamples = 100;
+    unsigned int nExamples = 1000;
     //min iters is 100
     int max_iter = 100;
 
-    float* vect = set_up(dim, nExamples);
+    double* vect = set_up(dim, nExamples);
     GNGConfiguration config = GNGConfiguration::getDefaultConfiguration();
     config.datasetType = GNGConfiguration::DatasetSeq;
 
@@ -136,7 +136,6 @@ static void TestBenchmark(benchmark::State& state, algorithms alg) {
         case ONLINE_HNSW:
             config.uniformgrid_optimization = false;
             config.ann_optimization = true;
-            config.ann_approach = GNGConfiguration::ONLINE_HNSW;
             break;
         case UNIFORM_GRID:
             config.uniformgrid_optimization = true;
@@ -155,9 +154,11 @@ static void TestBenchmark(benchmark::State& state, algorithms alg) {
     GNGServer gng(&config);
 
     for (auto _ : state) {
-        cout << "startng "<< endl;
+        cout << "staritng "<< endl;
         server(gng, vect, dim, nExamples);
         cout << "endng "<< endl;
+
+
     }
 
     state.counters.insert({{"dim", dim}, {"nExamples", nExamples}, {"max_iter", max_iter}, {"quantError", gng.getMeanError()}});

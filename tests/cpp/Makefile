@@ -8,7 +8,7 @@ include ../../src/Makevars
 # Explicit Makevars inheritances and overrides
 CXX := $(CXX)
 PREPROCESS = $(DEBUG) -DNRCPP_INTERFACE -DARMA_64BIT_WORD -DBOOST_DISABLE_ASSERTS
-PKG_CPPFLAGS = $(GCC_STD) $(PREPROCESS) $(R_CPPFLAGS) $(INCLUDES) -pthread --std=c++14
+PKG_CPPFLAGS = $(GCC_STD) $(PREPROCESS) $(R_CPPFLAGS) $(INCLUDES) -pthread --std=c++0x
 CPPFLAGS :=  $(PKG_CPPFLAGS) -O2 -g -s
 LDLIBS := $(PKG_LIBS) -lpthread -lgtest -lgtest_main
 
