@@ -24,6 +24,7 @@ namespace hnsw {
 struct index_options_t {
     std::size_t max_links = 32;
     std::size_t ef_construction = 200;
+    bool nsw = false;
 
     enum class insert_method_t {
         link_nearest,
@@ -38,7 +39,12 @@ struct index_options_t {
     };
 
     remove_method_t remove_method = remove_method_t::compensate_incomming_links;
-};
+    //remove_method_t remove_method = remove_method_t::no_link;
+
+
+
+}
+;
 
 
 }

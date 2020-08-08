@@ -34,6 +34,7 @@
 #include <random>
 #include <stdexcept>
 #include <vector>
+#include <stack>
 
 
 namespace hnsw {
@@ -116,12 +117,12 @@ public:
         insert(key, vector_t(vector));
     }
 
-    void insert(const key_t &key, vector_t &&vector) {
+    void insert(const key_t &key, vector_t &&vector, bool nsw = false) {
         if (nodes.count(key) > 0) {
             throw std::runtime_error("hnsw_index::insert: key already exists");
         }
 
-        size_t node_level = random_level() + 1;
+        size_t node_level = nsw ? 1 :  random_level() + 1;
 
         auto node_it = nodes.emplace(key, node_t {
             std::move(vector),
@@ -164,6 +165,17 @@ public:
         levels[node_level].insert(key);
     }
 
+    void move(const key_t &key, vector_t &&vector){
+
+        auto node_it = nodes.find(key);
+
+        if (node_it == nodes.end()) {
+            return;
+        }
+        //node_it->second.vector = vector;
+        node_it.value().vector = vector;
+
+    }
 
     void remove(const key_t &key) {
         auto node_it = nodes.find(key);
@@ -353,6 +365,84 @@ public:
         return true;
     }
 
+    // get average path length for level 0
+    double get_average_path_length(int nSamples = -1) {
+        if(nSamples < 0) {
+
+            double v1v2dist = 0;
+            double totalSamples = 0;
+            double n_hops;
+            cout << "nnodes: " << nodes.size() << endl;
+
+            for (int v1 = 0; v1 < nodes.size(); ++v1) {
+
+                vector_t v1_vector = nodes.at(v1).vector;
+
+
+                for (int v2 = v1+1; v2 < nodes.size(); ++v2) {
+
+                    if (v2 == v1) {
+                        continue;
+                    }
+                    vector_t v2_vector = nodes.at(v2).vector;
+
+                    n_hops = get_n_hops(v2_vector, 0, v1);
+                    v1v2dist += n_hops;
+                    totalSamples += 1;
+
+                }
+            }
+
+            return v1v2dist / totalSamples;
+
+        }
+        else{
+            random_device rnd_device;
+            mt19937 mersenne_engine{rnd_device()};  // Generates random integers
+            uniform_int_distribution<int> dist{0, nodes.size() - 1};
+            auto gen = [&dist, &mersenne_engine]() {
+                return dist(mersenne_engine);
+            };
+
+
+            vector<int> sample_nodes(nSamples);
+            vector<int> dest_nodes(nSamples);
+
+            generate(begin(sample_nodes), end(sample_nodes), gen);
+            generate(begin(dest_nodes), end(dest_nodes), gen);
+
+
+            double v1v2dist = 0;
+            double totalSamples = 0;
+            double n_hops;
+            cout << "nnodes: " << nodes.size() << endl;
+
+            for (int v1 : sample_nodes) {
+
+                vector_t v1_vector = nodes.at(v1).vector;
+
+
+                for (int v2 : dest_nodes) {
+
+                    if (v2 == v1) {
+                        continue;
+                    }
+                    vector_t v2_vector = nodes.at(v2).vector;
+
+                    n_hops = get_n_hops(v2_vector, 0, v1);
+                    v1v2dist += n_hops;
+                    totalSamples += 1;
+
+                }
+            }
+
+            return v1v2dist / totalSamples;
+
+
+
+        }
+
+    }
 
 private:
     size_t max_links(size_t level) const {
@@ -435,6 +525,71 @@ private:
         }
     }
 
+    struct Compare {
+        constexpr bool operator()(tuple<scalar_t, int, key_t> const & a,
+                                  tuple<scalar_t, int, key_t> const & b) const noexcept
+        {
+
+            return get<0>(a) > get<0>(b) || (get<0>(a) == get<0>(b) && get<1>(a) > get<1>(b));
+        }
+    };
+
+    long get_n_hops(const vector_t &target, size_t layer, const key_t &start_from) const {
+
+        double epsilon = 0.0001;
+
+        key_t key = start_from;
+        int n_hops= 0;
+        scalar_t neighbor_distance = distance(target, nodes.at(key).vector);
+
+        // tuple is: distance, nHops, key
+        std::priority_queue<
+                std::tuple<scalar_t, int, key_t>,
+                vector<std::tuple<scalar_t, int, key_t>>,
+                Compare>  pQueue;
+
+        std::set<key_t> visited;
+
+        pQueue.push(make_tuple(neighbor_distance, 0, start_from));
+        visited.insert(key);
+
+        do{
+            std::tuple<scalar_t, int , key_t> el = pQueue.top();
+            pQueue.pop();
+
+            neighbor_distance = std::get<0>(el);
+            n_hops = std::get<1>(el);
+            key = std::get<2>(el);
+
+            //cout << "nd: " << neighbor_distance << " n_hops: " << n_hops << " key: " << key << endl;
+            if(neighbor_distance < epsilon){
+                break;
+            }
+
+            // get links
+            const auto &node = nodes.at(key);
+            const auto &links = node.layers.at(layer).outgoing;
+
+            // search links of node
+            for (auto it = links.begin(); it != links.end(); ++it) {
+
+                if (it + 1 != links.end()) {
+                    prefetch<vector_t>::pref(nodes.at((it + 1)->first).vector);
+                }
+
+                key = it->first;
+                bool has_visited = visited.find(key) != visited.end();
+                if(!has_visited){
+                    neighbor_distance = distance(target, nodes.at(key).vector);
+                    // put links in queue
+                    pQueue.push(make_tuple(neighbor_distance, n_hops+1, it->first));
+                    visited.insert(key);
+                }
+            }
+        }while(!pQueue.empty());
+
+        return n_hops;
+    }
 
     key_t greedy_search(const vector_t &target, size_t layer, const key_t &start_from) const {
         key_t result = start_from;

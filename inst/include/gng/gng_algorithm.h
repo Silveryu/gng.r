@@ -14,7 +14,8 @@
 #include <gng_lazy_error_heap.h>
 #include <uniform_grid.h>
 #include <memory>
-
+#include "hnsw/index.hpp"
+#include "hnsw/distance.hpp"
 #include "utils/threading.h"
 #include "utils/circular_buffer.h"
 
@@ -55,7 +56,9 @@ public:
 			double * boundingbox_axis, double l, int max_nodes = 1000,
 			int max_age = 200, double alpha = 0.95, double betha = 0.9995,
 			double lambda = 200, double eps_w = 0.05, double eps_n = 0.0006,
-			int dim = 3, bool uniformgrid_optimization = true,
+			int dim = 3, bool uniformgrid_optimization = false,  bool ann_optimization = true,
+			int ann_approach = GNGConfiguration::ONLINE_HNSW_MV,  int max_links = 36,
+            int efConstruction = 32, int efSearch = 32, bool nsw = false, bool recall = false,
 			bool lazyheap_optimization = true, unsigned int utility_option =
 					GNGConfiguration::UtilityOff, double utility_k = -1,
             int max_iter = -1, int seed=777,
@@ -96,14 +99,29 @@ public:
 	double m_eps_w, m_eps_n; //epsilon of the winner and of the neighbour
 	int m_max_age, m_max_nodes, m_iteration;
 
-	bool m_toggle_uniformgrid, m_toggle_lazyheap;
+	bool m_toggle_uniformgrid, m_toggle_lazyheap, m_toggle_ann;
+
+	bool m_nsw;
+	bool m_recall;
 
     int max_iter;
 
 	double m_utility_k;
 	int m_utility_option;
+    int m_ann_approach;
+    int m_max_links;
+    int m_efConstruction;
+    int m_efSearch;
 
-	double m_alpha, m_betha;
+    long nInsertions = 0;
+    long nRemovals = 0;
+    long nSearches = 0;
+    long nMoves = 0;
+    double approxSearchCount = 0;
+    double key1Count = 0;
+    double key2Count = 0;
+
+    double m_alpha, m_betha;
 	double * m_betha_powers;
 	int m_betha_powers_to_n_length;
 	double * m_betha_powers_to_n;
@@ -122,7 +140,9 @@ public:
 	GNGGraph & m_g;
 	GNGDataset * g_db;
 	UniformGrid<std::vector<Node>, Node, int> * ug;
-	GNGLazyErrorHeap errorHeap;
+    hnsw::hnsw_index<long, std::vector<double>, hnsw::l2_square_distance_t>* ann;
+
+    GNGLazyErrorHeap errorHeap;
 
 	enum GngStatus {
 		GNG_PREPARING, GNG_RUNNING, GNG_PAUSED, GNG_TERMINATED
@@ -148,7 +168,7 @@ private:
 
 	//@return error and closest node index
 	std::pair<double, int> adapt(const double * ex, const double * extra);
-	std::pair<int, int> _getNearestNeurons(const double *ex);
+	std::pair<int, int> _getNearestNeurons(const double *ex, bool exact);
 
 	void randomInit();
 	void addNewNode();
