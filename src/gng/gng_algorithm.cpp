@@ -80,14 +80,17 @@ GNGAlgorithm::GNGAlgorithm(GNGGraph * g, GNGDataset* db,
 		double * boundingbox_origin, double * boundingbox_axis, double l,
 		int max_nodes, int max_age, double alpha, double betha, double lambda,
 		double eps_w, double eps_n, int dim, bool uniformgrid_optimization,
+        bool ann_optimization, int ann_approach,
+        int max_links, int efConstruction, int efSearch, bool nsw, bool recall,
 		bool lazyheap_optimization, unsigned int utility_option,
 		double utility_k, int max_iter, int seed, boost::shared_ptr<Logger> logger) :
 		m_g(*g), g_db(db), c(0), s(0), m_max_nodes(max_nodes), m_max_age(
 				max_age), m_alpha(alpha), m_betha(betha), m_lambda(lambda), m_eps_w(
 				eps_w), m_eps_n(eps_n), m_density_threshold(0.1), m_grow_rate(
 				1.5), errorHeap(), dim(dim), m_toggle_uniformgrid(
-				uniformgrid_optimization), m_toggle_lazyheap(
-				lazyheap_optimization),  m_utility_option(
+				uniformgrid_optimization), m_toggle_ann(ann_optimization), m_ann_approach(ann_approach), m_max_links(max_links),
+				m_efConstruction(efConstruction), m_efSearch(efSearch), m_nsw(nsw), m_recall(recall),
+				m_toggle_lazyheap(lazyheap_optimization),  m_utility_option(
 				utility_option), m_mean_error(1000), m_utility_k(utility_k), 
                 max_iter(max_iter), m_logger(
 				logger), m_iteration(0),
@@ -98,6 +101,7 @@ GNGAlgorithm::GNGAlgorithm(GNGGraph * g, GNGDataset* db,
 	DBG_PTR(m_logger, 10,
 			"GNGAlgorithm::Constructed object with utility "
 					+ to_string(utility_option) + " " + to_string(utility_k));
+	// used to profile ANN approach
 
 	if (m_toggle_uniformgrid) {
 		ug = new UniformGrid<std::vector<Node>, Node, int>(boundingbox_origin,
@@ -113,6 +117,39 @@ GNGAlgorithm::GNGAlgorithm(GNGGraph * g, GNGDataset* db,
 		REP(i, maximum_index + 1)
 			if (m_g.existsNode(i))
 				ug->insert(m_g[i].position, m_g[i].nr);
+
+	}
+	else if(m_toggle_ann){
+	    nInsertions = 0;
+	    nRemovals = 0;
+	    nSearches = 0;
+	    nMoves = 0;
+        approxSearchCount = 0;
+        key1Count = 0;
+        key2Count = 0;
+
+	    ann = new hnsw::hnsw_index<long , std::vector<double>, hnsw::l2_square_distance_t>();
+
+        // ann = (faiss::IndexHNSWFlat*)faiss::index_factory(dim, "IDMap,HNSW32", faiss::METRIC_L2);
+        ann->options.nsw = m_nsw;
+        ann->options.max_links = m_max_links;
+        ann->options.ef_construction = m_efConstruction;
+
+        // online hnsw
+        // cout << "M: " << m_max_links << endl;
+        // cout << "efSearch: "<<  m_efSearch << endl;
+        // cout << "efConstruction: " << ann->options.ef_construction << endl;
+
+
+        GNGGraphAccessHack::pool = &m_g;
+
+        int maximum_index = m_g.get_maximum_index();
+
+        for(size_t i=0; i<maximum_index+1; ++i) {
+            if (m_g.existsNode(i)) {
+                 ann->insert(m_g[i].nr, std::vector<double>(m_g[i].position, m_g[i].position + dim));
+            }
+        }
 
 	}
 
@@ -179,6 +216,12 @@ void GNGAlgorithm::randomInit() {
 		ug->insert(m_g[0].position, 0);
 		ug->insert(m_g[1].position, 1);
 	}
+    else if(m_toggle_ann){
+
+        ann->insert(0, vector<double>{m_g[0].position, m_g[0].position + dim});
+        ann->insert(1, vector<double>{m_g[1].position, m_g[1].position + dim});
+        nInsertions += 2;
+    }
 
 	if (m_toggle_lazyheap) {
 		setErrorNew(&m_g[0], 0.0);
@@ -241,8 +284,13 @@ void GNGAlgorithm::addNewNode() {
 	m_g[new_node_index].extra_data = (error_nodes_new[0]->extra_data
 			+ error_nodes_new[1]->extra_data) / 2.0;
 
-	if (m_toggle_uniformgrid)
-		ug->insert(m_g[new_node_index].position, new_node_index);
+	if (m_toggle_uniformgrid) {
+        ug->insert(m_g[new_node_index].position, new_node_index);
+    }
+	else if(m_toggle_ann){
+        ann->insert(new_node_index, std::vector<double>(m_g[new_node_index].position, m_g[new_node_index].position + dim));
+        nInsertions += 1;
+	}
 
 	DBG_PTR(m_logger, 4, "GNGAlgorith::AddNewNode::added " + to_string(m_g[new_node_index]));
 
@@ -292,14 +340,14 @@ int GNGAlgorithm::predict(const std::vector<double> & ex) {
 	if (ex.size() != g_db->getGNGDim())
 		throw BasicException("Wrong example dimensionality");
 
-	return _getNearestNeurons(&ex[0]).first;
+	return _getNearestNeurons(&ex[0], true).first;
 }
 
 std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
 		const double * extra) {
 	DBG_PTR(m_logger, 4, "GNGAlgorith::Adapt::commence search");
 
-	std::pair<int, int> nearest = _getNearestNeurons(ex);
+	std::pair<int, int> nearest = _getNearestNeurons(ex, false);
 	GNGNode * nearest_0 = &m_g[nearest.first], * nearest_1 = &m_g[nearest.second];
 
 
@@ -326,8 +374,16 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
 
 	DBG_PTR(m_logger, 3, "GNGAlgorith::Adapt::accounted for the error");
 
-	if (m_toggle_uniformgrid)
-		ug->remove(nearest_0->position);
+	if (m_toggle_uniformgrid) {
+        ug->remove(nearest_0->position);
+    }
+	else if(m_toggle_ann){
+
+	    if(m_ann_approach == GNGConfiguration::ONLINE_HNSW){
+            ann->remove(nearest_0->nr);
+            nRemovals += 1;
+        }
+	}
 	for (int i = 0; i < this->dim; ++i)
 		nearest_0->position[i] += m_eps_w * (ex[i] - nearest_0->position[i]);
 
@@ -335,14 +391,37 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
 	if (extra)
 		nearest_0->extra_data = (nearest_0->extra_data + extra[0]) / 2.0;
 
-	if (m_toggle_uniformgrid)
-		ug->insert(nearest_0->position, nearest_0->nr);
+	if (m_toggle_uniformgrid) {
+        ug->insert(nearest_0->position, nearest_0->nr);
+    }
+	else if(m_toggle_ann){
+
+	    switch(m_ann_approach){
+	        case GNGConfiguration::ONLINE_HNSW:
+                ann->insert(nearest_0->nr, vector<double>{nearest_0->position,nearest_0->position + dim});
+                nInsertions += 1;
+                break;
+	        case GNGConfiguration::ONLINE_HNSW_MV:
+                ann->move(nearest_0->nr, vector<double>{nearest_0->position,nearest_0->position + dim});
+                nMoves += 1;
+                break;
+        }
+
+	}
 
 	if (nearest_0->edgesCount) {
 		FOREACH(GNGEdge * edg, *nearest_0)
 		{
-			if (m_toggle_uniformgrid)
-				ug->remove(m_g[(edg)->nr].position);
+			if (m_toggle_uniformgrid) {
+                ug->remove(m_g[(edg)->nr].position);
+            }
+			else if(m_toggle_ann){
+
+			    if(m_ann_approach == GNGConfiguration::ONLINE_HNSW) {
+                    ann->remove((edg)->nr);
+                    nRemovals +=1;
+                }
+			}
 
 			for (int i = 0; i < this->dim; ++i) { //param accounting
 				m_g[(edg)->nr].position[i] += m_eps_n
@@ -355,8 +434,21 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
 						+ extra[0] * 0.1);
 			}
 
-			if (m_toggle_uniformgrid)
-				ug->insert(m_g[(edg)->nr].position, (edg)->nr);
+			if (m_toggle_uniformgrid) {
+                ug->insert(m_g[(edg)->nr].position, (edg)->nr);
+            }
+			else if(m_toggle_ann) {
+			    switch(m_ann_approach){
+			        case GNGConfiguration::ONLINE_HNSW:
+                        ann->insert((edg)->nr, vector<double>(m_g[(edg)->nr].position, m_g[(edg)->nr].position + dim));
+                        nInsertions += 1;
+                        break;
+			        case GNGConfiguration::ONLINE_HNSW_MV:
+                        ann->move((edg)->nr, vector<double>{m_g[(edg)->nr].position,m_g[(edg)->nr].position + dim});
+                        nMoves += 1;
+                        break;
+                }
+            }
 		}
 	}
 
@@ -403,8 +495,13 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
 				}
 #endif
 
-				if (m_toggle_uniformgrid)
-					ug->remove(m_g[nr].position);
+				if (m_toggle_uniformgrid) {
+                    ug->remove(m_g[nr].position);
+                }
+                else if(m_toggle_ann){
+                    ann->remove(nr);
+                    nRemovals += 1;
+                }
 
 				DBG_PTR(m_logger, 8,
 						"GNGAlgorithm::Adapt() Erasing node "
@@ -421,8 +518,14 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
 				LOG_PTR(m_logger, 1,
 						"GNGAlgorithm::Adapt() remove node because no edges, shouldn't happen"); //Shouldn't happen
 
-				if (m_toggle_uniformgrid)
-					ug->remove(m_g[nearest_0->nr].position);
+				if (m_toggle_uniformgrid) {
+                    ug->remove(m_g[nearest_0->nr].position);
+                }
+				else if(m_toggle_ann) {
+                    ann->remove(nearest_0->nr);
+                    nRemovals += 1;
+                }
+
 				m_g.deleteNode(nearest_0->nr);
 				break;
 			}
@@ -542,7 +645,7 @@ GNGNode ** GNGAlgorithm::LargestErrorNodes() {
 void GNGAlgorithm::updateClustering() {
 	gmum::scoped_lock<GNGDataset> db_lock(*g_db);
 	for(unsigned int i=0;i<g_db->size();++i){
-		set_clustering(i, _getNearestNeurons(g_db->getPosition(i)).first);
+		set_clustering(i, _getNearestNeurons(g_db->getPosition(i), true).first);
 	}
 }
 
@@ -775,6 +878,7 @@ const vector<int> & GNGAlgorithm::get_clustering(){
 		was_running = true;
 		pause();
 	}
+	updateClustering();
 	vector<int> & result = clustering_result;
 	if(was_running)
 		run();
@@ -789,7 +893,7 @@ const vector<int> & GNGAlgorithm::get_clustering(){
 
 
 
-std::pair<int, int> GNGAlgorithm::_getNearestNeurons(const double *ex){
+std::pair<int, int> GNGAlgorithm::_getNearestNeurons(const double *ex, bool exact){
 	if (m_toggle_uniformgrid) {
 			DBG_PTR(m_logger, 1, "GNGAlgorithm::Adapt::Graph size " + to_string(m_g.get_number_nodes()));
 			std::vector<int> nearest_index = ug->findNearest(ex, 2); //TwoNearestNodes(ex->position);
@@ -806,9 +910,94 @@ std::pair<int, int> GNGAlgorithm::_getNearestNeurons(const double *ex){
 					ASSERT(m_g[nearest_index[1]].position > m_g.get_dist(m_g[nearest_index[0]].position, ex));
 			#endif
 
-			return std::pair<int, int>(nearest_index[0], nearest_index[1]);
-		} else {
-			DBG_PTR(m_logger, 1, "GNGAlgorithm::just called TwoNearestNodes");
+        return std::pair<int, int>(nearest_index[0], nearest_index[1]);
+
+    }
+	else if(m_toggle_ann && !exact){
+
+        long key1, key2;
+        int k=2;
+
+        vector<double> query{ex, ex+dim};
+        //vector of struct {key, distance}
+        //insert efSearch
+        auto results = ann->search( query, k, m_efSearch);
+        nSearches += 1;
+        key1 = results.front().key;
+        key2 = results.back().key;
+        //ann->search(1, ex, k, D, I);
+
+        //ann->add_with_ids(2, m_g[0].position, ids);
+            // code block
+
+        DBG_PTR(m_logger, 1, "GNGAlgorithm::Adapt::Found nearest");
+
+        // For test measure purposes only, calculate recall compared to exact ann
+        if (m_recall){
+            approxSearchCount += 1;
+
+            // do normal search
+            int start_index = 0;
+            while (!m_g.existsNode(start_index))
+                ++start_index;
+
+            double dist0 = m_g.get_dist(ex, m_g[start_index].position);
+            int best_0 = start_index, best_1 = -1;
+            for (int i = start_index + 1; i <= m_g.get_maximum_index(); ++i) {
+                if (m_g.existsNode(i)) {
+                    double new_dist = m_g.get_dist(ex, m_g[i].position);
+                    if (dist0 > new_dist) {
+                        dist0 = new_dist;
+                        best_0 = i;
+                    }
+                }
+            }
+
+            DBG_PTR(m_logger, 1, "finding next\n");
+
+            start_index = 0;
+            while (!m_g.existsNode(start_index) || start_index == best_0)
+                ++start_index;
+            double dist1 = m_g.get_dist(ex, m_g[start_index].position);
+            best_1 = start_index;
+
+            for (int i = start_index + 1; i <= m_g.get_maximum_index(); ++i) { //another idea for storing list of actual nodes?
+                if (m_g.existsNode(i) && i != best_0) {
+                    double new_dist = m_g.get_dist(ex, m_g[i].position);
+                    if (dist1 > new_dist) {
+                        dist1 = new_dist;
+                        best_1 = i;
+                    }
+                }
+            }
+
+            if(best_0 == key1){
+                key1Count += 1;
+            }
+
+            if(best_1 == key2){
+                key2Count += 1;
+            }
+        }
+
+
+
+#ifdef GMUM_DEBUG_2
+        if (nearest_index[0] == nearest_index[1]) {
+            throw BasicException("Found same nearest_indexes");  //something went wrong (-1==-1 też)
+        }
+#endif
+
+
+#ifdef GMUM_DEBUG_2
+        ASSERT(m_g[nearest_index[1]].position > m_g.get_dist(m_g[nearest_index[0]].position, ex));
+#endif
+
+        return std::pair<int, int>(key1, key2);
+
+    } else {
+
+        DBG_PTR(m_logger, 1, "GNGAlgorithm::just called TwoNearestNodes");
 
 			int start_index = 0;
 			while (!m_g.existsNode(start_index))
