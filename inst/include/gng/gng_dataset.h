@@ -38,13 +38,13 @@ public:
 	virtual unsigned int drawExample()=0;
 
 	///Retrieves pointer to position
-	virtual const float * getPosition(unsigned int) const=0;
+	virtual const double * getPosition(unsigned int) const=0;
 
 	///Retrieves pointer to vertex data, with unsigned int as descriptor of meta
-	virtual const float * getExtraData(unsigned int) const=0;
+	virtual const double * getExtraData(unsigned int) const=0;
 
 	///Inserts examples to the dataset
-	virtual void insertExamples(const float *, const float*, const float *,
+	virtual void insertExamples(const double *, const double*, const double *,
 			unsigned int count)=0;
 
 	virtual void removeExample(unsigned int)=0;
@@ -59,7 +59,7 @@ public:
 };
 
 ///Storage :< GNGDatabaseStorage
-template<typename T = float>
+template<typename T = double>
 class GNGDatasetSimple: public GNGDataset {
 
 protected:
@@ -126,13 +126,13 @@ public:
 			if (access_method_ == Sampling) {
 				return RANDOM_INT(mt_rand, 0, size() - 1);
 			} else {
-        const float * ex;
+        const double * ex;
 				unsigned int index;
 
 				do {
 				    index = RANDOM_INT(mt_rand, 0, size() - 1);
 					ex = getPosition(index);
-				} while (storage_probability_[index] < __float_rnd(0, 1.0));
+				} while (storage_probability_[index] < __double_rnd(0, 1.0));
 
 				return index;
 			}
@@ -146,8 +146,8 @@ public:
 		}
 	}
 
-	void insertExamples(const float * positions, const float *extra,
-			const float *probability, unsigned int count) {
+	void insertExamples(const double * positions, const double *extra,
+			const double *probability, unsigned int count) {
 
 		if (storage_.capacity() < storage_.size() + count * dim_) {
 			DBG_PTR(logger_,10, "Resizing storage_");

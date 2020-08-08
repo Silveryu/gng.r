@@ -77,7 +77,7 @@ bool RAMGNGGraph<Node, Edge, Mutex>::isEdge(int a, int b) const {
 }
 
 template<class Node, class Edge, class Mutex>
-const float *RAMGNGGraph<Node, Edge, Mutex>::getPosition(int nr) const {
+const double *RAMGNGGraph<Node, Edge, Mutex>::getPosition(int nr) const {
     return g[nr].position;
 }
 
@@ -93,14 +93,14 @@ RAMGNGGraph<Node, Edge, Mutex>::operator[](int i) {
 }
 
 template<class Node, class Edge, class Mutex>
-float RAMGNGGraph<Node, Edge, Mutex>::get_dist(int a, int b) {
+double RAMGNGGraph<Node, Edge, Mutex>::get_dist(int a, int b) {
     return get_dist(g[a].position, g[b].position);
 }
 
 template<class Node, class Edge, class Mutex>
-float RAMGNGGraph<Node, Edge, Mutex>::get_euclidean_dist(const float *pos_a,
-                                                          const float *pos_b) const {
-    float distance = 0;
+double RAMGNGGraph<Node, Edge, Mutex>::get_euclidean_dist(const double *pos_a,
+                                                          const double *pos_b) const {
+    double distance = 0;
     for (int i = 0; i < this->gng_dim; ++i)
         distance += (pos_a[i] - pos_b[i]) * (pos_a[i] - pos_b[i]);
 
@@ -108,17 +108,17 @@ float RAMGNGGraph<Node, Edge, Mutex>::get_euclidean_dist(const float *pos_a,
 }
 
 template<class Node, class Edge, class Mutex>
-float RAMGNGGraph<Node, Edge, Mutex>::get_dist(const float *pos_a,
-                                                const float *pos_b) const {
+double RAMGNGGraph<Node, Edge, Mutex>::get_dist(const double *pos_a,
+                                                const double *pos_b) const {
     ASSERT(dist_fnc == Euclidean || dist_fnc == Cosine);
     if (dist_fnc == Euclidean) {
-        float distance = 0;
+        double distance = 0;
         for (size_t i = 0; i < this->gng_dim; ++i)
             distance += (pos_a[i] - pos_b[i]) * (pos_a[i] - pos_b[i]);
 
         return distance;
     } else {
-        float norm_1 = 0, norm_2 = 0, distance = 0;
+        double norm_1 = 0, norm_2 = 0, distance = 0;
 
         for (size_t i = 0; i < this->gng_dim; ++i) {
             norm_1 += (pos_a[i]) * (pos_a[i]);
@@ -133,7 +133,7 @@ float RAMGNGGraph<Node, Edge, Mutex>::get_dist(const float *pos_a,
 }
 
 template<class Node, class Edge, class Mutex>
-int RAMGNGGraph<Node, Edge, Mutex>::newNode(const float *position) {
+int RAMGNGGraph<Node, Edge, Mutex>::newNode(const double *position) {
     if (first_free == -1) {
         DBG_PTR(m_logger, 10, "RAMGNGGraph::newNode() growing pool");
         this->resizeGraph();
@@ -160,7 +160,7 @@ int RAMGNGGraph<Node, Edge, Mutex>::newNode(const float *position) {
 
     ++this->nodes;
     memcpy(&(g[createdNode].position[0]), position,
-           sizeof(float) * (this->gng_dim));        //param
+           sizeof(double) * (this->gng_dim));        //param
 
     //TODO: this should be tracked by GNGAlgorithm
     g[createdNode].error = 0.0;
@@ -288,27 +288,27 @@ template<class Node, class Edge, class Mutex>
 void RAMGNGGraph<Node, Edge, Mutex>::serialize(std::ostream &output) {
     this->lock();
 
-    vector<float> S;
+    vector<double> S;
     S.reserve(10000);
 
     //Header
-    S.push_back((float) (g.size()));
-    S.push_back((float) (maximum_index + 1));
-    S.push_back((float) gng_dim);
-    S.push_back((float) first_free);
-    S.push_back((float) nodes);
+    S.push_back((double) (g.size()));
+    S.push_back((double) (maximum_index + 1));
+    S.push_back((double) gng_dim);
+    S.push_back((double) first_free);
+    S.push_back((double) nodes);
 
     DBG_PTR(m_logger, 7, "GNGGraph::Serializing nodes");
     //Nodes
     for (int i = 0; i < g.size(); ++i) {
         if (existsNode(i)) {
-            S.push_back((float) 1);
-            vector<float> serialized_node = g[i].dumpVertexData();
+            S.push_back((double) 1);
+            vector<double> serialized_node = g[i].dumpVertexData();
 
             std::copy(serialized_node.begin(), serialized_node.end(),
                       std::back_inserter(S));
         } else {
-            S.push_back((float) 0);
+            S.push_back((double) 0);
         }
     }
 
@@ -317,16 +317,16 @@ void RAMGNGGraph<Node, Edge, Mutex>::serialize(std::ostream &output) {
     //Edges
     for (int i = 0; i < g.size(); ++i) {
         if (existsNode(i)) {
-            vector<float> serialized_node = g[i].dumpEdges();
+            vector<double> serialized_node = g[i].dumpEdges();
             std::copy(serialized_node.begin(), serialized_node.end(),
                       std::back_inserter(S));
         } else {
-            S.push_back((float) 0);
+            S.push_back((double) 0);
         }
     }DBG_PTR(m_logger, 7, "GNGGraph::Serializing nextFree");
     //NextFree
     for (int i = 0; i < g.size(); ++i) {
-        S.push_back((float) next_free[i]);
+        S.push_back((double) next_free[i]);
     }DBG_PTR(m_logger, 7, "GNGGraph::Serialize;:writing out");
 
     _write_bin_vect(output, S);
@@ -340,8 +340,8 @@ void RAMGNGGraph<Node, Edge, Mutex>::load(std::istream &input) {
 
     DBG_PTR(m_logger, 7, "GNGGraph:: loading ");
 
-    vector<float> S = _load_bin_vector(input);
-    vector<float>::iterator itr = S.begin();
+    vector<double> S = _load_bin_vector(input);
+    vector<double>::iterator itr = S.begin();
     //Header
     unsigned int bufor_size = (int) *itr;
     maximum_index = (int) *(++itr) - 1;
@@ -446,21 +446,21 @@ static void writeToGraphML(GNGGraph &g, std::ostream &out) {
     <<
     "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n";
     out
-    << "<key id=\"key0\" for=\"edge\" attr.name=\"dist\" attr.type=\"float\" />\n";
+    << "<key id=\"key0\" for=\"edge\" attr.name=\"dist\" attr.type=\"double\" />\n";
     out
-    << "<key id=\"key1\" for=\"node\" attr.name=\"error\" attr.type=\"float\" />\n";
+    << "<key id=\"key1\" for=\"node\" attr.name=\"error\" attr.type=\"double\" />\n";
     out
-    << "<key id=\"key2\" for=\"node\" attr.name=\"label\" attr.type=\"float\" />\n";
+    << "<key id=\"key2\" for=\"node\" attr.name=\"label\" attr.type=\"double\" />\n";
     out
     << "<key id=\"key3\" for=\"node\" attr.name=\"gng_index\" attr.type=\"int\" />\n";
     out
-    << "<key id=\"key4\" for=\"node\" attr.name=\"utility\" attr.type=\"float\" />\n";
+    << "<key id=\"key4\" for=\"node\" attr.name=\"utility\" attr.type=\"double\" />\n";
     out
-    << "<key id=\"key5\" for=\"node\" attr.name=\"v0\" attr.type=\"float\" />\n";
+    << "<key id=\"key5\" for=\"node\" attr.name=\"v0\" attr.type=\"double\" />\n";
     out
-    << "<key id=\"key6\" for=\"node\" attr.name=\"v1\" attr.type=\"float\" />\n";
+    << "<key id=\"key6\" for=\"node\" attr.name=\"v1\" attr.type=\"double\" />\n";
     out
-    << "<key id=\"key7\" for=\"node\" attr.name=\"v2\" attr.type=\"float\" />\n";
+    << "<key id=\"key7\" for=\"node\" attr.name=\"v2\" attr.type=\"double\" />\n";
     out
     <<
     "<graph id=\"G\" edgedefault=\"undirected\" parse.nodeids=\"canonical\" parse.edgeids=\"canonical\" parse.order=\"nodesfirst\">\n";

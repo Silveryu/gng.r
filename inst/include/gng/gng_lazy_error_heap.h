@@ -12,13 +12,13 @@
 #include <heap.h>
 namespace gmum {
 struct ErrorNode {
-	float error;
+	double error;
 	int i;
 	ErrorNode(const ErrorNode & orig) {
 		error = orig.error;
 		i = orig.i;
 	}
-	ErrorNode(float error, int i) :
+	ErrorNode(double error, int i) :
 			error(error), i(i) {
 	}
 	ErrorNode() {
@@ -92,7 +92,7 @@ public:
 		}
 	}
 
-	void update(int nr, float new_error) {
+	void update(int nr, double new_error) {
 		m_buffer_size = std::max(m_buffer_size, nr + 1);
 		checkBufferSize();
 
@@ -101,7 +101,7 @@ public:
 		m_buffer[nr] = super::insert(ErrorNode(new_error, nr));
 	}
 
-	void insert(int nr, float error) {
+	void insert(int nr, double error) {
 		m_buffer_size = std::max(m_buffer_size, nr + 1);
 		checkBufferSize();
 

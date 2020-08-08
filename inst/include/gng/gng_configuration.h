@@ -32,18 +32,12 @@ struct GNGConfiguration {
 		UtilityOff, UtilityBasicOn
 	};
 
-	enum AnnApproach {
-        LSH, ONLINE_HNSW, ONLINE_HNSW_MV
-	};
-
     int seed;
 
 	/**Maximum number of nodes*/
 	int max_nodes; //=1000;
 	/**Uniform grid optimization*/
 	bool uniformgrid_optimization; //=true,lazyheap=true;
-    /**Aproximate nearest neighbours optimization*/
-    bool ann_optimization;
 	/**Lazy heap optimization*/
 	bool lazyheap_optimization;
 	/**Bounding box specification*/
@@ -51,24 +45,22 @@ struct GNGConfiguration {
 	/**Dimensionality of examples*/
 	unsigned dim;
 
-	size_t ef;
-
-	std::vector<float> orig;
-	std::vector<float> axis;
+	std::vector<double> orig;
+	std::vector<double> axis;
 	/**Max edge age*/
 	int max_age; //=200;
 	/**Alpha coefficient*/
-	float alpha; //=0.95;
+	double alpha; //=0.95;
 	/**Beta coefficient*/
-	float beta; //=0.9995;
+	double beta; //=0.9995;
 	/**Lambda coefficient*/
-	float lambda; //=200;
+	double lambda; //=200;
 	/**Epsilion v. How strongly move winning node*/
-	float eps_w; //=0.05;
+	double eps_w; //=0.05;
 	/**Memory bound*/
 	int graph_memory_bound;
 	/**Epsilion n*/
-	float eps_n; //=0.0006;
+	double eps_n; //=0.0006;
 
     ///Maximum number of iterations
     int max_iter; //=-1;
@@ -85,13 +77,10 @@ struct GNGConfiguration {
 	int starting_nodes;
 
 	///Utility constant
-	float experimental_utility_k;
+	double experimental_utility_k;
 
 	///Utility option. Currently supported simples utility
 	int experimental_utility_option;
-
-    /// Ann option
-    int ann_approach;
 
 	GNGConfiguration() {
         seed = -1; //is equivalent to null
@@ -105,8 +94,6 @@ struct GNGConfiguration {
 		experimental_utility_option = (int) UtilityOff;
 		experimental_utility_k = 1.5;
 
-		ann_approach = (int)LSH;
-
 		graph_storage = RAMMemory;
 
 		dim = 3;
@@ -115,8 +102,7 @@ struct GNGConfiguration {
 		datasetType = DatasetSampling;
 		max_nodes = 1000;
 		uniformgrid_optimization = false;
-		ann_optimization = false;
-		graph_memory_bound = 200000 * sizeof(float);
+		graph_memory_bound = 200000 * sizeof(double);
 
 		lazyheap_optimization = false;
 		max_age = 200;
@@ -135,9 +121,9 @@ struct GNGConfiguration {
 	void serialize(std::ostream & out) const;
 
     //This is a simplification - we assume square box
-	void setBoundingBox(float min, float max) {
-		orig = vector<float>();
-		axis = vector<float>();
+	void setBoundingBox(double min, double max) {
+		orig = vector<double>();
+		axis = vector<double>();
 		for (size_t i = 0; i < dim; ++i) {
 			orig.push_back(min);
 			axis.push_back(max - min);

@@ -9,13 +9,13 @@ file(GLOB GMUMR_SOURCES
     "${SRC_DIR}/utils/*.cpp" "${SRC_DIR}/utils/*.c")
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${R_LD_FLAGS}") 
-set(CMAKE_CXX_FLAGS "${R_CXX_FLAGS} -std=c++14")
+set(CMAKE_CXX_FLAGS "${R_CXX_FLAGS} -std=c++0x")
 
 if(APPLE)
     set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 endif()
 
-add_library(gmum.r SHARED ${GMUMR_SOURCES} ../inst/include/hnsw/detail/CustomVec.h)
+add_library(gmum.r SHARED ${GMUMR_SOURCES})
 target_link_libraries(gmum.r ${R_LIBS})
 set_target_properties(gmum.r PROPERTIES PREFIX "")
 INSTALL(TARGETS gmum.r DESTINATION ${SRC_DIR})
