@@ -32,18 +32,37 @@ struct GNGConfiguration {
 		UtilityOff, UtilityBasicOn
 	};
 
+	enum AnnApproach {
+        LSH, ONLINE_HNSW, ONLINE_HNSW_MV
+	};
+
     int seed;
 
 	/**Maximum number of nodes*/
 	int max_nodes; //=1000;
 	/**Uniform grid optimization*/
 	bool uniformgrid_optimization; //=true,lazyheap=true;
+  /**Aproximate nearest neighbours optimization*/
+  bool ann_optimization;
+  /// ANN option
+  int ann_approach;
+  /// Hyperparameters of HNSW
+  int max_links;
+  int efConstruction;
+  int efSearch;
+
+  /** use random_level = 1 **/
+  bool nsw;
+  /** calculate recall rate on approximate approach **/
+  bool recall;
 	/**Lazy heap optimization*/
 	bool lazyheap_optimization;
 	/**Bounding box specification*/
 
 	/**Dimensionality of examples*/
 	unsigned dim;
+
+	size_t ef;
 
 	std::vector<double> orig;
 	std::vector<double> axis;
@@ -82,7 +101,9 @@ struct GNGConfiguration {
 	///Utility option. Currently supported simples utility
 	int experimental_utility_option;
 
-	GNGConfiguration() {
+
+
+    GNGConfiguration() {
         seed = -1; //is equivalent to null
 
 		verbosity = 1;
@@ -94,6 +115,16 @@ struct GNGConfiguration {
 		experimental_utility_option = (int) UtilityOff;
 		experimental_utility_k = 1.5;
 
+        ann_optimization = true;
+		ann_approach = (int)AnnApproach ::ONLINE_HNSW_MV;
+
+
+        max_links = 36;
+		efConstruction = 32;
+        efSearch = 32;
+        nsw = false;
+        recall = false;
+
 		graph_storage = RAMMemory;
 
 		dim = 3;
@@ -102,6 +133,7 @@ struct GNGConfiguration {
 		datasetType = DatasetSampling;
 		max_nodes = 1000;
 		uniformgrid_optimization = false;
+		ann_optimization = false;
 		graph_memory_bound = 200000 * sizeof(double);
 
 		lazyheap_optimization = false;

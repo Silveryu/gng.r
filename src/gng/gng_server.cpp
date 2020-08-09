@@ -70,7 +70,8 @@ void GNGServer::init(GNGConfiguration configuration,
 		throw invalid_argument("Invalid configuration passed to GNGServer");
     }
 
-	this->current_configuration = configuration; //assign configuration
+
+    this->current_configuration = configuration; //assign configuration
 
 
 
@@ -151,7 +152,14 @@ void GNGServer::init(GNGConfiguration configuration,
 					current_configuration.eps_w, current_configuration.eps_n,
 					current_configuration.dim,
 					current_configuration.uniformgrid_optimization,
-					current_configuration.lazyheap_optimization,
+					current_configuration.ann_optimization,
+					current_configuration.ann_approach,
+          current_configuration.max_links,
+					current_configuration.efConstruction,
+					current_configuration.efSearch,
+					current_configuration.nsw,
+          current_configuration.recall,
+          current_configuration.lazyheap_optimization,
 					current_configuration.experimental_utility_option,
 					current_configuration.experimental_utility_k, 
                     current_configuration.max_iter,
@@ -465,6 +473,88 @@ GNGGraph & GNGServer::getGraph() {
 GNGDataset & GNGServer::getDatabase() {
 	return *this->gngDataset.get();
 }
+
+long GNGServer::getNInsertions() {
+    return this->gngAlgorithm->nInsertions;
+}
+
+long GNGServer::getNRemovals() {
+    return this->gngAlgorithm->nRemovals;
+}
+
+long GNGServer::getNSearches() {
+    return this->gngAlgorithm->nSearches;
+}
+
+long GNGServer::getNMoves() {
+    return this->gngAlgorithm->nMoves;
+}
+
+double GNGServer::getKey1Recall(){
+    return this->gngAlgorithm->key1Count / this->gngAlgorithm->approxSearchCount;
+}
+
+double GNGServer::getKey2Recall(){
+    return this->gngAlgorithm->key2Count / this->gngAlgorithm->approxSearchCount;
+}
+
+double GNGServer::getConstructionRecall(int nQueries) {
+
+    unsigned int nNodes = this->getNumberNodes();
+    if(nNodes == 0){
+        return -1;
+    }
+
+    int M = this->gngAlgorithm->ann->options.max_links;
+    int efConst = this->gngAlgorithm->ann->options.ef_construction;
+    int dim = this->gngDataset->getDataDim();
+    int totalRecall = 0;
+
+    for(int q= 0; q < nQueries;++q) {
+
+        const double *example = this->gngDataset->getPosition(this->gngDataset->drawExample());
+        vector<double> query{example, example + dim};
+        auto hnsw_results = this->gngAlgorithm->ann->search(query, M, efConst );
+
+        vector< pair<double, int> > nodes;
+        vector<int> bf_results(M, -1);
+        vector<double> distances(M, -1);
+
+        int start_index = 0;
+        while (!this->gngAlgorithm->m_g.existsNode(start_index))
+            ++start_index;
+
+        // inefficient but unimportant
+
+
+        for (int i = start_index + 1; i <= this->gngAlgorithm->m_g.get_maximum_index(); ++i) {
+
+            if (this->gngAlgorithm->m_g.existsNode(i)) {
+
+                double new_dist = this->gngAlgorithm->m_g.get_dist(example, this->gngAlgorithm->m_g[i].position);
+
+                nodes.emplace_back(make_pair(new_dist, i));
+            }
+        }
+
+        std::sort(nodes.begin(), nodes.end());
+
+
+        for(int r = 0; r < M; ++r){
+            if(hnsw_results.at(r).key == nodes.at(r).second){
+                totalRecall++;
+            }
+        }
+    }
+
+    return (double)totalRecall / (M*nQueries);
+
+}
+
+double GNGServer::getHNSWAvgPathLength(int nSamples = 1000) {
+    return this->gngAlgorithm->ann->get_average_path_length(nSamples);
+}
+
 
 GNGServer::~GNGServer() {
 	LOG_PTR(m_logger, 5, "GNGServer::destructor for "+to_str(m_index)+" called");

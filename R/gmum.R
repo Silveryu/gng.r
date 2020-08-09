@@ -20,10 +20,8 @@ evalqOnLoad( {
   }
   
   `.DollarNames.Rcpp_C++Object` <<- autocompl
-  .DollarNames.Rcpp_SVMClient <<- autocompl
   .DollarNames.Rcpp_GNGServer <<- autocompl
-  .DollarNames.Rcpp_CecModel <<- autocompl
-  
+
   if(!exists(".rs.getAnywhere")) {
     .rs.getAnywhere <- NULL # Silences R CMD check warning
   }

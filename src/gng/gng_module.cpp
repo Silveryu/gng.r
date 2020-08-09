@@ -35,13 +35,17 @@ RCPP_MODULE(gng_module){
 	.constructor()
 
 	.field(".uniformgrid_optimization", &GNGConfiguration::uniformgrid_optimization, "Uniform grid optimization" )
-	.field(".lazyheap_optimization", &GNGConfiguration::lazyheap_optimization )
-
+	.field(".ann_optimization", &GNGConfiguration::ann_optimization, "Approximate NN optimization")
+	.field(".max_links", &GNGConfiguration::max_links, "Max links for each node")
+	.field(".efConstruction", &GNGConfiguration::efConstruction, "efConstruction")
+	.field(".efSearch", &GNGConfiguration::efSearch, "efSearch")
+	.field(".nsw", &GNGConfiguration::nsw, "nsw")
+  .field(".recall", &GNGConfiguration::recall, "Measure recall when using Approxiamte NN ")
+  .field(".lazyheap_optimization", &GNGConfiguration::lazyheap_optimization )
 	.field("alpha", &GNGConfiguration::alpha, "Alpha coefficient. "
 			"Decrease the error variables of the nodes neighboring to the newly inserted node by this fraction. Default 0.5")
 	.field("beta", &GNGConfiguration::beta, "Beta coefficient. "
 			"Decrease the error variables of all node nodes by this fraction. Forgetting rate. Default 0.99")
-
 	.field("eps_n", &GNGConfiguration::eps_n, "How strongly move neighbour node. Default 0.0006")
 	.field(".experimental_utility_option", &GNGConfiguration::experimental_utility_option, "Default 0 (off). You can turn it on to 1, but remember to turn off optimizations. Likely will change in the future.")
 	.field(".experimental_utility_k",
@@ -86,7 +90,17 @@ RCPP_MODULE(gng_module){
    .method("getDatasetSize", &GNGServer::getDatasetSize)
    .method("getNumberNodes", &GNGServer::getNumberNodes)
    .method("getNode", &GNGServer::getNode)
-   .method("getMeanError", &GNGServer::getMeanError);
+   .method("getMeanError", &GNGServer::getMeanError)
+   .method("getNInsertions", &GNGServer::getNInsertions)
+   .method("getNRemovals", &GNGServer::getNRemovals)
+   .method("getNSearches", &GNGServer::getNSearches)
+   .method("getNMoves", &GNGServer::getNMoves)
+   .method("getKey1Recall", &GNGServer::getKey1Recall)
+   .method("getKey2Recall", &GNGServer::getKey2Recall)
+   .method("getConstructionRecall", &GNGServer::getConstructionRecall)
+    .method("getHNSWAvgPathLength", &GNGServer::getHNSWAvgPathLength);
+
+
 }
 
 #include <RcppArmadillo.h>
