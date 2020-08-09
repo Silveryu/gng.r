@@ -2,10 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(gmum.r)
 
 file(GLOB GMUMR_SOURCES 
-    "${SRC_DIR}/cec/*.cpp" "${SRC_DIR}/cec/*.c"
-    "${SRC_DIR}/svm/*.cpp" "${SRC_DIR}/svm/*.c"
     "${SRC_DIR}/gng/*.cpp" "${SRC_DIR}/gng/*.c"
-    "${SRC_DIR}/svmlight/*.cpp" "${SRC_DIR}/svmlight/*.c"
     "${SRC_DIR}/utils/*.cpp" "${SRC_DIR}/utils/*.c")
 
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${R_LD_FLAGS}") 
