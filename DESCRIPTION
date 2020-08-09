@@ -1,11 +1,11 @@
 Package: gmum.r
-Version: 0.2.1
-Date: 2015-09-25
-Title: GMUM Machine Learning Group Package
+Version: 0.1
+Date: 2020-08-08
+Title: Approximate GNG, fork of GMUM Machine Learning Group Package
 Type: Package
-Author: Wojciech Czarnecki, Stanislaw Jastrzebski, Marcin Data, Igor Sieradzki, Mateusz Bruno-Kaminski, Karol Jurek, Piotr Kowenzowski, Michal Pletty, Konrad Talik, Maciej Zgliczynski
-Maintainer: Stanislaw Jastrzebski <staszek.jastrzebski@gmail.com>
-Description: Direct R interface to Support Vector Machine libraries ('LIBSVM' and 'SVMLight') and efficient C++ implementations of Growing Neural Gas and models developed by 'GMUM' group (Cross Entropy Clustering and 2eSVM).
+Author: Wojciech Czarnecki, Stanislaw Jastrzebski, Marcin Data, Igor Sieradzki, Mateusz Bruno-Kaminski, Karol Jurek, Piotr Kowenzowski, Michal Pletty, Konrad Talik, Maciej Zgliczynski, Silverio Pereira
+Maintainer: Silverio Pereira <p.m.s@ua.pt>
+Description: Adaptation of Growing Neural Gas model developed by 'GMUM' group for high dimensional spaces and model sizes
 License: MIT + file LICENSE
 Repository: CRAN
 Imports:
@@ -28,5 +28,3 @@ Suggests:
     klaR,
     testthat,
     mlbench
-URL: https://github.com/gmum/gmum.r
-BugReports: https://github.com/gmum/gmum.r/issues
