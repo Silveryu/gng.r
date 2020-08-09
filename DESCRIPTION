@@ -1,5 +1,5 @@
 Package: gmum.r
-Version: 0.1
+Version: 0.2.1
 Date: 2020-08-08
 Title: Approximate GNG, fork of GMUM Machine Learning Group Package
 Type: Package
