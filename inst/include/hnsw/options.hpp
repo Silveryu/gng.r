@@ -20,6 +20,7 @@
 
 namespace hnsw {
 
+
 struct index_options_t {
     std::size_t max_links = 32;
     std::size_t ef_construction = 200;
@@ -42,5 +43,8 @@ struct index_options_t {
 
 
 
-  };
-  }
+}
+;
+
+
+}

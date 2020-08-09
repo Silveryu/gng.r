@@ -11,9 +11,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <gng_algorithm.h>
-#include <hnsw/distance.hpp>
-#include <hnsw/index.hpp>
-
 
 using namespace boost;
 using namespace gmum;
@@ -83,8 +80,8 @@ GNGAlgorithm::GNGAlgorithm(GNGGraph * g, GNGDataset* db,
 		double * boundingbox_origin, double * boundingbox_axis, double l,
 		int max_nodes, int max_age, double alpha, double betha, double lambda,
 		double eps_w, double eps_n, int dim, bool uniformgrid_optimization,
-    bool ann_optimization, int ann_approach,
-    int max_links, int efConstruction, int efSearch, bool nsw, bool recall,
+        bool ann_optimization, int ann_approach,
+        int max_links, int efConstruction, int efSearch, bool nsw, bool recall,
 		bool lazyheap_optimization, unsigned int utility_option,
 		double utility_k, int max_iter, int seed, boost::shared_ptr<Logger> logger) :
 		m_g(*g), g_db(db), c(0), s(0), m_max_nodes(max_nodes), m_max_age(
@@ -95,7 +92,8 @@ GNGAlgorithm::GNGAlgorithm(GNGGraph * g, GNGDataset* db,
 				m_efConstruction(efConstruction), m_efSearch(efSearch), m_nsw(nsw), m_recall(recall),
 				m_toggle_lazyheap(lazyheap_optimization),  m_utility_option(
 				utility_option), m_mean_error(1000), m_utility_k(utility_k), 
-        max_iter(max_iter), m_logger(logger), m_iteration(0),
+                max_iter(max_iter), m_logger(
+				logger), m_iteration(0),
 				m_gng_status(GNG_TERMINATED),
 				m_gng_status_request(GNG_TERMINATED), mt_rand(seed) {
 
@@ -219,6 +217,7 @@ void GNGAlgorithm::randomInit() {
 		ug->insert(m_g[1].position, 1);
 	}
     else if(m_toggle_ann){
+
         ann->insert(0, vector<double>{m_g[0].position, m_g[0].position + dim});
         ann->insert(1, vector<double>{m_g[1].position, m_g[1].position + dim});
         nInsertions += 2;
@@ -377,6 +376,7 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
         ug->remove(nearest_0->position);
     }
 	else if(m_toggle_ann){
+
 	    if(m_ann_approach == GNGConfiguration::ONLINE_HNSW){
             ann->remove(nearest_0->nr);
             nRemovals += 1;
@@ -393,6 +393,7 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
         ug->insert(nearest_0->position, nearest_0->nr);
     }
 	else if(m_toggle_ann){
+
 	    switch(m_ann_approach){
 	        case GNGConfiguration::ONLINE_HNSW:
                 ann->insert(nearest_0->nr, vector<double>{nearest_0->position,nearest_0->position + dim});
@@ -403,6 +404,7 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
                 nMoves += 1;
                 break;
         }
+
 	}
 
 	if (nearest_0->edgesCount) {
@@ -521,6 +523,7 @@ std::pair<double, int> GNGAlgorithm::adapt(const double * ex,
                     ann->remove(nearest_0->nr);
                     nRemovals += 1;
                 }
+
 				m_g.deleteNode(nearest_0->nr);
 				break;
 			}
@@ -712,9 +715,9 @@ void GNGAlgorithm::runAlgorithm() { //1 thread needed to do it (the one that com
 
 				ASSERT(adapt_result.second >= 0);
 				set_clustering(ex, adapt_result.second);
-	
+
 				accumulated_error += adapt_result.first;
-				
+
 				accumulated_error_count += 1;
 			}
 
@@ -890,20 +893,20 @@ const vector<int> & GNGAlgorithm::get_clustering(){
 
 std::pair<int, int> GNGAlgorithm::_getNearestNeurons(const double *ex, bool exact){
 	if (m_toggle_uniformgrid) {
-        DBG_PTR(m_logger, 1, "GNGAlgorithm::Adapt::Graph size " + to_string(m_g.get_number_nodes()));
-        std::vector<int> nearest_index = ug->findNearest(ex, 2); //TwoNearestNodes(ex->position);
-        DBG_PTR(m_logger, 1, "GNGAlgorithm::Adapt::Found nearest");
+			DBG_PTR(m_logger, 1, "GNGAlgorithm::Adapt::Graph size " + to_string(m_g.get_number_nodes()));
+			std::vector<int> nearest_index = ug->findNearest(ex, 2); //TwoNearestNodes(ex->position);
+			DBG_PTR(m_logger, 1, "GNGAlgorithm::Adapt::Found nearest");
 
-#ifdef GMUM_DEBUG_2
-        if (nearest_index[0] == nearest_index[1]) {
-            throw BasicException("Found same nearest_indexes");  //something went wrong (-1==-1 też)
-        }
-#endif
+			#ifdef GMUM_DEBUG_2
+					if (nearest_index[0] == nearest_index[1]) {
+						throw BasicException("Found same nearest_indexes");  //something went wrong (-1==-1 też)
+					}
+			#endif
 
 
-#ifdef GMUM_DEBUG_2
-        ASSERT(m_g[nearest_index[1]].position > m_g.get_dist(m_g[nearest_index[0]].position, ex));
-#endif
+			#ifdef GMUM_DEBUG_2
+					ASSERT(m_g[nearest_index[1]].position > m_g.get_dist(m_g[nearest_index[0]].position, ex));
+			#endif
 
         return std::pair<int, int>(nearest_index[0], nearest_index[1]);
 
@@ -974,6 +977,9 @@ std::pair<int, int> GNGAlgorithm::_getNearestNeurons(const double *ex, bool exac
                 key2Count += 1;
             }
         }
+
+
+
 #ifdef GMUM_DEBUG_2
         if (nearest_index[0] == nearest_index[1]) {
             throw BasicException("Found same nearest_indexes");  //something went wrong (-1==-1 też)
@@ -984,11 +990,13 @@ std::pair<int, int> GNGAlgorithm::_getNearestNeurons(const double *ex, bool exac
 #ifdef GMUM_DEBUG_2
         ASSERT(m_g[nearest_index[1]].position > m_g.get_dist(m_g[nearest_index[0]].position, ex));
 #endif
+
         return std::pair<int, int>(key1, key2);
 
     } else {
 
-      DBG_PTR(m_logger, 1, "GNGAlgorithm::just called TwoNearestNodes");
+        DBG_PTR(m_logger, 1, "GNGAlgorithm::just called TwoNearestNodes");
+
 			int start_index = 0;
 			while (!m_g.existsNode(start_index))
 				++start_index;
@@ -1029,7 +1037,7 @@ std::pair<int, int> GNGAlgorithm::_getNearestNeurons(const double *ex, bool exac
 			#endif
 
 			return std::pair<int, int>(best_0, best_1);
-    }
+		}
 }
 
 

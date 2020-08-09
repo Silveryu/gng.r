@@ -14,6 +14,7 @@ void GNGConfiguration::deserialize(std::istream & in)  {
 
         /**Ann optimization*/
         in >> ann_optimization;
+
         /**Ann optimization approach*/
         in >> ann_approach;
 
@@ -79,18 +80,18 @@ void GNGConfiguration::deserialize(std::istream & in)  {
 		out << max_nodes << endl; //=1000;
 		/**Uniform grid optimization*/
 		out << uniformgrid_optimization << endl; //=true,lazyheap=true;
-    /**Ann optimization*/
-    out << ann_optimization << endl; //=true,lazyheap=true;
-    /**Ann optimization approach*/
-    out << ann_approach << endl;
-    /** Hyperparams of ann**/
-    out << max_links << endl;
-    out << efConstruction << endl;
-    out << efSearch << endl;
-    out << nsw << endl;
-    out << recall << endl;
-    
-    /**Lazy heap optimization*/
+        /**Ann optimization*/
+        out << ann_optimization << endl; //=true,lazyheap=true;
+        /**Ann optimization approach*/
+        out << ann_approach << endl;
+        /** Hyperparams of ann**/
+        out << max_links << endl;
+        out << efConstruction << endl;
+        out << efSearch << endl;
+        out << nsw << endl;
+        out << recall << endl;
+
+        /**Lazy heap optimization*/
 		out << lazyheap_optimization << endl;
 		/**Bounding box specification*/
 

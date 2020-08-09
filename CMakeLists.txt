@@ -3,21 +3,17 @@ project(gmumr_project)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(R)
-find_package(Threads REQUIRED)
-find_package(Boost 1.53.0 REQUIRED COMPONENTS date_time system program_options regex)
-
 
 set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/inst/include CACHE PATH "Path to include directory")
 set(SRC_DIR ${PROJECT_SOURCE_DIR}/src CACHE PATH "Path to gmum.r library source files")
 set(TESTS_DIR ${PROJECT_SOURCE_DIR}/tests/cpp CACHE PATH "Path to C++ tests directory")
 set(TEST_DATA_PATH ${PROJECT_SOURCE_DIR}/inst/dev/datasets CACHE PATH "Path to test input data directory")
-set(GMUM_INCLUDE ${INCLUDE_DIR} ${INCLUDE_DIR}/gng ${INCLUDE_DIR}/utils CACHE STRING "Modules to include")
+set(GMUM_INCLUDE ${INCLUDE_DIR} ${INCLUDE_DIR}/gng ${INCLUDE_DIR}/utils CACHE TYPE LIST)
 
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
 set(CMAKE_INSTALL_RPATH "${SRC_DIR}")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-set(Boost_USE_MULTITHREADED ON)
 
 add_definitions(-DNDEBUG -DNDEBUG_GMUM -DNDEBUG_GMUM_2 -DRCPP_INTERFACE -DARMA_64BIT_WORD)
 include_directories(${GMUM_INCLUDE} ${R_INCLUDE_DIR})
