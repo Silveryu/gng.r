@@ -46,8 +46,6 @@ gng.type.utility<- function(k=1.3){
 gng.type.approximate<- function(max_links=36, efConstruction=32, efSearch=32, nsw=FALSE, recall=FALSE){
   c(3, max_links, efConstruction, efSearch, nsw, recall)
 }
-
-
 .gng.dataset.bagging.prob <- 3
 .gng.dataset.bagging <- 2
 .gng.dataset.sequential <-1
@@ -555,7 +553,6 @@ insertExamples <- NULL
     config$.efSearch = type[4]
     config$.nsw = type[5]
     config$.recall = type[6]
-
   }else{
     config$.ann_optimization = FALSE
     config$.uniformgrid_optimization = FALSE

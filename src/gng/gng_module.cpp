@@ -40,15 +40,12 @@ RCPP_MODULE(gng_module){
 	.field(".efConstruction", &GNGConfiguration::efConstruction, "efConstruction")
 	.field(".efSearch", &GNGConfiguration::efSearch, "efSearch")
 	.field(".nsw", &GNGConfiguration::nsw, "nsw")
-    .field(".recall", &GNGConfiguration::recall, "Measure recall when using Approxiamte NN ")
-
-    .field(".lazyheap_optimization", &GNGConfiguration::lazyheap_optimization )
-
+  .field(".recall", &GNGConfiguration::recall, "Measure recall when using Approxiamte NN ")
+  .field(".lazyheap_optimization", &GNGConfiguration::lazyheap_optimization )
 	.field("alpha", &GNGConfiguration::alpha, "Alpha coefficient. "
 			"Decrease the error variables of the nodes neighboring to the newly inserted node by this fraction. Default 0.5")
 	.field("beta", &GNGConfiguration::beta, "Beta coefficient. "
 			"Decrease the error variables of all node nodes by this fraction. Forgetting rate. Default 0.99")
-
 	.field("eps_n", &GNGConfiguration::eps_n, "How strongly move neighbour node. Default 0.0006")
 	.field(".experimental_utility_option", &GNGConfiguration::experimental_utility_option, "Default 0 (off). You can turn it on to 1, but remember to turn off optimizations. Likely will change in the future.")
 	.field(".experimental_utility_k",

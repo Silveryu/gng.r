@@ -134,7 +134,7 @@ if(R_COMMAND)
     endif(RCPP_CXX_FLAGS)
  
     message(STATUS "R_LD_FLAGS: ${R_LD_FLAGS}")
-    set(R_CXX_FLAGS "${RCPP_CXX_FLAGS} ${RCPPARMADILLO_CXX_FLAGS}" CACHE TYPE STRING)
+    set(R_CXX_FLAGS "${RCPP_CXX_FLAGS} ${RCPPARMADILLO_CXX_FLAGS}" CACHE STRING "Rcpp flags")
     message(STATUS "R_CXX_FLAGS: ${R_CXX_FLAGS}")
 else()
     message(SEND_ERROR "FindR.cmake requires the following variables to be set: R_COMMAND")
