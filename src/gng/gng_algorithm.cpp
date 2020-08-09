@@ -265,8 +265,6 @@ void GNGAlgorithm::addNewNode() {
 
 	DBG_PTR(m_logger, 4, "GNGAlgorith::AddNewNode::search completed and successful");
 
-	
-
 	double * position = new double[this->dim]; //param
 
 	//TODO: < GNG_DIM?
@@ -717,9 +715,9 @@ void GNGAlgorithm::runAlgorithm() { //1 thread needed to do it (the one that com
 
 				ASSERT(adapt_result.second >= 0);
 				set_clustering(ex, adapt_result.second);
-	
+
 				accumulated_error += adapt_result.first;
-				
+
 				accumulated_error_count += 1;
 			}
 

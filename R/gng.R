@@ -536,7 +536,7 @@ insertExamples <- NULL
     config$.uniformgrid_optimization = TRUE
     config$.ann_optimization = FALSE
 
-    config$.lazyheap_optimization = TRUE  
+    config$.lazyheap_optimization = TRUE
     config$.set_bounding_box(type[2], type[3])
     
     if(!train.online){
@@ -757,9 +757,9 @@ min.improvement=1e-3,
 lambda=200,
 verbosity=0,
 seed=-1,
-max_links = 32,
-efConstruction = 36,
-efSearch = 32,
+max_links = 16,
+efConstruction = 32,
+efSearch = 16,
 nsw = FALSE,
 recall = FALSE
 ){
@@ -769,7 +769,7 @@ recall = FALSE
   eps.n=eps.n, eps.w=eps.w, max.edge.age=max.edge.age, type=gng.type.approximate(max_links, efConstruction, efSearch, nsw, recall), train.online=train.online, max.iter=max.iter, dim=dim, min.improvement=min.improvement, lambda=lambda, verbosity=verbosity, seed=seed)
   assign("call", call, gng)
   gng
-}
+}    
 
 predictComponent <- function(object, x){
   tryCatch(if(is.null(object$components.membership)){
