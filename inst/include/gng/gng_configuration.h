@@ -42,25 +42,27 @@ struct GNGConfiguration {
 	int max_nodes; //=1000;
 	/**Uniform grid optimization*/
 	bool uniformgrid_optimization; //=true,lazyheap=true;
-    /**Aproximate nearest neighbours optimization*/
-    bool ann_optimization;
-    /// ANN option
-    int ann_approach;
-    /// Hyperparameters of HNSW
-    int max_links;
-    int efConstruction;
-    int efSearch;
+  /**Aproximate nearest neighbours optimization*/
+  bool ann_optimization;
+  /// ANN option
+  int ann_approach;
+  /// Hyperparameters of HNSW
+  int max_links;
+  int efConstruction;
+  int efSearch;
 
-    /** use random_level = 1 **/
-    bool nsw;
-    /** calculate recall rate on approximate approach **/
-    bool recall;
+  /** use random_level = 1 **/
+  bool nsw;
+  /** calculate recall rate on approximate approach **/
+  bool recall;
 	/**Lazy heap optimization*/
 	bool lazyheap_optimization;
 	/**Bounding box specification*/
 
 	/**Dimensionality of examples*/
 	unsigned dim;
+
+	size_t ef;
 
 	std::vector<double> orig;
 	std::vector<double> axis;
@@ -131,6 +133,7 @@ struct GNGConfiguration {
 		datasetType = DatasetSampling;
 		max_nodes = 1000;
 		uniformgrid_optimization = false;
+		ann_optimization = false;
 		graph_memory_bound = 200000 * sizeof(double);
 
 		lazyheap_optimization = false;

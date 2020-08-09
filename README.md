@@ -1,5 +1,6 @@
 #gmum.R
 [![Build Status](https://travis-ci.org/gmum/gmum.r.svg?branch=dev)](https://travis-ci.org/gmum/gmum.r/)
+<img src="http://cranlogs.r-pkg.org/badges/last-week/gmum.r">
 
 gmum.R is a package consisting in various models. We focus on efficiency (underlying C++ implementation) and easy of usage.
 gmum.r is a close collaboration between GMUM group members (<a href="http://gmum.net">http://gmum.net</a>) and students.
@@ -132,3 +133,6 @@ c <- CEC(k=3, x=dataset, control.nstart=10, method.type='spherical', method.init
 plot(c)
 ```
 
+## Citation
+
+If you use gmum.r in your work please cite one of the papers, see `citation()`.

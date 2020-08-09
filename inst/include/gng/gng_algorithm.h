@@ -58,7 +58,7 @@ public:
 			double lambda = 200, double eps_w = 0.05, double eps_n = 0.0006,
 			int dim = 3, bool uniformgrid_optimization = false,  bool ann_optimization = true,
 			int ann_approach = GNGConfiguration::ONLINE_HNSW_MV,  int max_links = 36,
-            int efConstruction = 32, int efSearch = 32, bool nsw = false, bool recall = false,
+      int efConstruction = 32, int efSearch = 32, bool nsw = false, bool recall = false,
 			bool lazyheap_optimization = true, unsigned int utility_option =
 					GNGConfiguration::UtilityOff, double utility_k = -1,
             int max_iter = -1, int seed=777,
@@ -100,11 +100,10 @@ public:
 	int m_max_age, m_max_nodes, m_iteration;
 
 	bool m_toggle_uniformgrid, m_toggle_lazyheap, m_toggle_ann;
-
 	bool m_nsw;
 	bool m_recall;
 
-    int max_iter;
+  int max_iter;
 
 	double m_utility_k;
 	int m_utility_option;
@@ -140,9 +139,8 @@ public:
 	GNGGraph & m_g;
 	GNGDataset * g_db;
 	UniformGrid<std::vector<Node>, Node, int> * ug;
-    hnsw::hnsw_index<long, std::vector<double>, hnsw::l2_square_distance_t>* ann;
-
-    GNGLazyErrorHeap errorHeap;
+  hnsw::hnsw_index<long, std::vector<double>, hnsw::l2_square_distance_t>* ann;
+  GNGLazyErrorHeap errorHeap;
 
 	enum GngStatus {
 		GNG_PREPARING, GNG_RUNNING, GNG_PAUSED, GNG_TERMINATED
