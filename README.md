@@ -72,7 +72,7 @@ Can be seen as controlling the trade-off between index construction time and ind
 * `recall` Tells the algorithm to calculate search recall during the process. Severely impacts GNG time. Useful for performance testing and debugging.
 
 ## Performance as model size increases
-![Performance](https://github.com/Silveryu/gng.r/blob/master/R/Figures/approxGNG_nnodes_time_alg.png)
+![Performance](https://github.com/Silveryu/gng.r/blob/master/R/Figures/approxGNG_time_nnodes.png)
 
 
 
