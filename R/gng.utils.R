@@ -44,7 +44,7 @@ summary.Rcpp_GNGServer <- function(object, ...){
   if(exists("object$call")){
     print(object$call)
   }
-  if(object$hasStarted()){
+  if(object$.hasStarted()){
     print(sprintf("%d nodes with mean error %f", 
                   object$getNumberNodes(), object$getMeanError()))
     
