@@ -16,7 +16,7 @@ Maintained subpackage containing the original GNG algorithm and the Approximate 
 
 ### Example: cluster sift1M dataset with Approximate GNG
 
-In this example we will construct a clustering of the <a href="http://corpus-texmex.irisa.fr/">SIFT1M dataset</a>. 
+In this example we construct a clustering of the <a href="http://corpus-texmex.irisa.fr/">SIFT1M dataset</a>. 
 ```R
 library(gmum.r)
 
@@ -49,7 +49,7 @@ gng$getHNSWAvgPathLength(gng$getNumberNodes())
 gng$getKey1Recall()
 gng$getKey2Recall()
 
-# Number of operations made:
+# Number of operations made
 gng$getNRemovals()
 gng$getNMoves()
 gng$getNInsertions()
