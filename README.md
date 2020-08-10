@@ -35,7 +35,7 @@ run(gng)
 Sys.sleep(100)
 pause(gng)
 
-# After training, confirm construction recal ~= 0.95, if not, retrain with greater efConstruction parameter
+# After training confirm construction recal ~= 0.95, if not, retrain with greater efConstruction parameter
 # estimation of construction recall can be done with
 gng$getConstructionRecall(-1)
 ```
