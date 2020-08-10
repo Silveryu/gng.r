@@ -11,7 +11,7 @@ Package includes:
 
 ## Growing Neural Gas
 
-Maintained subpackage containing the original GNG algorithm and the Approximate GNG Algorithm. Both produce topological graphs that can be easily convert to igraph or dumped to file and loaded in the future. The original GNG features and documentation remain the same.
+Maintained subpackage containing the original GNG algorithm and the Approximate GNG algorithm. Both produce topological graphs that can be easily convert to igraph or dumped to file and loaded in the future. The original GNG features and documentation remain the same.
 
 
 ### Example: cluster sift1M dataset with Approximate GNG
