@@ -132,13 +132,15 @@ df_orig <- df_95[df_95$M == -1,]
 df_95 <- df_95[df_95$M > 0,]
 
 ggplot(df_orig, aes(x=nnodes, y=quantError))+
-  geom_line(aes(color="GNG")) + geom_point(aes(color="GNG")) +
+  scale_shape_identity()+
+  scale_size_identity() +
+   geom_line(aes(color="GNG")) + geom_point(aes(shape = 16, size = 2, color="GNG")) +
   
   geom_line(mapping = aes(x = df_95$nnodes, y= df_95$quantError, color="Approx. GNG, search recall = 0.95")) + 
-  geom_point(aes(color="Approx. GNG, search recall = 0.95"), x = df_95$nnodes, y= df_95$quantError) +
+  geom_point(aes(shape = 15, size = 2, color="Approx. GNG, search recall = 0.95"), x = df_95$nnodes, y= df_95$quantError) +
   
   geom_line(mapping = aes(x = df_99$nnodes, y= df_99$quantError, color="Approx. GNG, search recall = 0.99")) + 
-  geom_point(aes(color="Approx. GNG, search recall = 0.99"), x = df_99$nnodes, y= df_99$quantError) +
+  geom_point(aes(shape = 17, size = 2, color="Approx. GNG, search recall = 0.99"), x = df_99$nnodes, y= df_99$quantError) +
   
   ylab("Quantization error") +
   xlab("# nodes")+

@@ -365,6 +365,84 @@ errorStatistics <- NULL
 #' }
 OptimizedGNG <- NULL
 
+
+#' @title Constructor of Approximate GrowingNeuralGas object.
+#' @rdname approximate-gng
+#'
+#' @export
+#'
+#' @description Construct Approximate GNG object. To be used with high dimensions or high model size.
+# Substitutes the NN step of the GNG by an Approximate NN method: HNSW, several parameters are added to configure HNSW.
+#'
+#' @param beta Decrease the error variables of all node
+#' nodes by this fraction (forgetting rate). Default 0.99
+#'
+#' @param alpha Decrease the error variables of the nodes neighboring to
+#' the newly inserted node by this fraction. Default 0.5
+#'
+#' @param lambda New vertex is added every lambda iterations. Default 200
+#'
+#' @param max.nodes Maximum number of nodes
+#' (after reaching this size it will continue running, but new noes won't be added)
+#'
+#' @param eps.n Strength of adaptation of neighbour node. Default \code{0.0006}
+#'
+#' @param eps.w Strength of adaptation of winning node. Default \code{0.05}
+#'
+#' @param max.iter If training offline will stop if exceedes max.iter iterations. Default \code{200}
+#'
+#' @param train.online If used will run in online fashion. Default \code{FALSE}
+#'
+#' @param min.improvement Used for offline (default) training.
+#' Controls stopping criterion, decrease if training stops too early. Default \code{1e-3}
+#'
+#' @param dim Used for training online, specifies dataset example dimensionality
+#'
+#' @param value.range All example features should be in this range, required for optimized version of the algorithm. Default \code{(0,1)}
+#'
+#' @param x Passed data (matrix of data.frame) for offline training
+#'
+#' @param labels Every example can be associated with labels that are added to nodes later. By default empty
+#'
+#' @param max.edge.age Maximum edge age. Decrease to increase speed of change of graph topology. Default \code{200}
+#'
+#' @param verbosity How verbose should the process be, as integer from \eqn{[0,6]}, default: \code{0}
+#'
+#' @param seed Seed for internal randomization
+#'
+#' @param max_links Defines number of links created for a new node of the HNSW graph upon insertion. 2-100 is a reasonable range.
+#' defining it to be higher works best on datasets with high intrinsic dimensionality or when high recall is needed.
+#'
+#' @param efConstruction Can be seen as controlling the trade-off between index construction time and index quality of the HNSW.
+#' Should be increased until we achieve at least 95% construction recall.
+#'
+#' @param efSearch Higher efSearch translates to  better search recall but slower search times.
+#' Controls how approximate we can allow the ANN step, and consequently the GNG model to be in exchange for GNG construction time.
+#'
+#' @param nsw Allows to constrict the HNSW to just 1 level, making it behave like the NSW algorithm.
+#'
+#' @param recall Tells algorithm to calculate search recall during the process. Severely slows down algorithm.
+#' Useful for performance testing and debugging.
+#'
+#' @examples
+#' \dontrun{
+#' # Train ApproximateGNG offline:
+#' X <- gng.preset.sphere(1000)
+#' ## Creating a 100 node model over 100 * \lambda iterations of the GNG
+#' gng <- ApproximateGNG(X, max.nodes=100, max.iter=100, max_links = 16, efSearch = 16, efConstruction = 32)
+#' ## Confirm construction recal ~= 0.95, sampling 1000 nodes to do this:
+#' gng$getConstructionRecall(1000)
+#'
+#' # Train online:
+#' gng <- ApproximateGNG(train.online = TRUE, dim=3, max.nodes=1000, max_links = 16, efSearch = 16, efConstruction = 32)
+#' insertExamples(gng, X)
+#' run(gng)
+#' Sys.sleep(10)
+#' pause(gng)
+#' }
+ApproximateGNG <- NULL
+
+
 #' @name clustering
 #' @title clustering
 #' 
@@ -751,7 +829,7 @@ eps.n=0.0006,
 eps.w= 0.05,
 max.edge.age = 200,
 train.online=FALSE,
-max.iter=200,
+max.iter=1000,
 dim=-1,
 min.improvement=1e-3,
 lambda=200,
@@ -882,6 +960,90 @@ calculateCentroids  <- function(object, community.detection.algorithm=spinglass.
     }
   }
   centroids
+}
+
+# get all info from all nodes to a dataframe
+getNodes <- function(object){
+
+  gngNodes <- data.frame(t(sapply(1:object$getNumberNodes(),
+  function(n) object$getNode(n)$pos)))
+
+
+  return(gngNodes)
+
+}
+
+# Computationaly expensive!
+getQuantizationError <- function(object, dataset){
+  nodes <- getNodes(object)
+
+  proj <- nodes[object$getClustering(),]
+
+  quantAcc = 0
+  batchSize = 100000
+
+  for(i in  1:ceiling( dim(dataset)[1] / batchSize ) ){
+
+    startIndex = 1 + (i-1)*batchSize
+    if(i*batchSize > dim(dataset)[1]){
+      endIndex = dim(dataset)[1] %% batchSize
+    }
+    else{
+      endIndex = i*batchSize
+    }
+
+    quantAcc = quantAcc + sum(sqrt(rowSums((proj[startIndex:endIndex,] - dataset[startIndex:endIndex,])^2)))
+
+  }
+
+  totalQuantError <- quantAcc
+  meanQuantError <- totalQuantError / dim(dataset)[1]
+
+  errorStats <- list("meanQuantError"= meanQuantError, "totalQuantError" = totalQuantError)
+  return(errorStats)
+
+}
+
+
+
+# plot gng for if 2D or 3D manifold
+# renderEdges and scaleToError drastically decrease performance
+plotGNG <- function(object, renderEdges = FALSE, scaleToError = FALSE){
+  gngNodes <- getNodes(object)
+  gngErrors <- getErrors(object)
+
+  # dimensionality of the data
+  d <- length(object$getNode(1)$pos)
+
+  # scale errors to [1,2]
+  cex <- if(scaleToError) scales::rescale(gngErrors, to=c(1,3)) else NULL
+
+  colnames(gngNodes) <- c("X","Y","Z")[1:dim(gngNodes)[2]]
+
+  if(d == 3){
+    # plot nodes
+    plot3Drgl::scatter3Drgl(gngNodes$X, gngNodes$Y, gngNodes$Z, colvar = gngErrors, cex = cex)
+
+    if(renderEdges){
+      lines <- getEdgePositions(object)
+
+      #plot edges
+      plot3Drgl::scatter3Drgl(lines$X, lines$Y, lines$Z, type="l", col="grey", add=TRUE)
+    }
+
+  }
+  else if(d == 2){
+
+
+    plot3Drgl::scatter2Drgl(gngNodes$X, gngNodes$Y, colvar=gngErrors, cex=cex)
+
+    if(renderEdges){
+      lines <- getEdgePositions(object)
+
+      plot3Drgl::scatter2Drgl(lines$X, lines$Y, type="l", col="grey", add=TRUE)
+    }
+
+  }
 }
 
 
