@@ -11,7 +11,7 @@ Package includes:
 
 ## Growing Neural Gas
 
-Maintained subpackage containing the original GNG algorithm and the Approximate GNG Algorithm. Both produce topological graphs, that can be easily convert to igraph, or dumped to file and loaded in the future. The original GNG features and documentation remain the same.
+Maintained subpackage containing the original GNG algorithm and the Approximate GNG Algorithm. Both produce topological graphs that can be easily convert to igraph or dumped to file and loaded in the future. The original GNG features and documentation remain the same.
 
 
 ### Example: cluster sift1M dataset with Approximate GNG
@@ -22,13 +22,13 @@ library(gmum.r)
 
 # Load data
 # Already standardized and in csv form
-sift1M_norm <- read.csv("~/University/Thesis/tests/R/sift1M_data.csv")
+sift1M_norm <- read.csv("sift1M_data.csv")
 
 # Train in an offline manner
 # Cluster SIFT1M into 1K nodes over 1K iterations
 gng <- ApproximateGNG(sift1M_norm , max.nodes=1000, max.iter=1000, max_links = 16, efSearch = 16, efConstruction = 32)
 
-#Train in an online manner
+# Train in an online manner
 gng <- ApproximateGNG(train.online = TRUE, dim=ncol(sift1M_norm), max.nodes=1000, max_links = 16, efSearch = 16, efConstruction = 32)
 insertExamples(gng, sift1M_norm)
 run(gng)
@@ -40,7 +40,7 @@ pause(gng)
 gng$getConstructionRecall(-1)
 ```
 
-Usage is much the same as the original GNG but several performance indicators and QoL changes were added:
+Usage is much the same as the original GNG but several performance indicators and QoL changes were added
 ```R
 # Get Average Path Length of the HNSW Algorithm
 gng$getHNSWAvgPathLength(gng$getNumberNodes())
@@ -62,11 +62,18 @@ getQuantizationError(gng, sift1M_norm)
 getNodes(gng)
 ```
 
-## Approximate Growing Neural Gas Hyperparameters
-Hyperparams specific to Approximate Growing Neural Gas are:
+## Approximate GNG Hyperparameters
+Hyperparams specific to Approximate Growing Neural Gas are mostly related to those of HNSW
 * `max_links` Defines number of links created for a new node of the HNSW graph upon insertion. 2-100 is a reasonable range. defining it to be higher works best on datasets with high intrinsic dimensionality or when high recall is needed
 * `efConstruction` 	
 Can be seen as controlling the trade-off between index construction time and index quality of the HNSW. Should be increased until we achieve at least 95% construction recall
 * `efSearch` Higher efSearch translates to better search recall but slower search times. Controls how approximate we can allow the ANN step (and consequently the GNG model) to be in exchange for slower GNG time
 * `nsw` Allows to constrict the HNSW to just 1 level, making it behave like the NSW algorithm
-* `recal`Tells the algorithm to calculate search recall during the process. Severely impacts GNG time. Useful for performance testing and debugging.
+* `recall` Tells the algorithm to calculate search recall during the process. Severely impacts GNG time. Useful for performance testing and debugging.
+
+## Performance as model size increases
+![Performance](https://github.com/Silveryu/gng.r/blob/master/R/Figures/approxGNG_nnodes_time_alg.png)
+
+
+
+
