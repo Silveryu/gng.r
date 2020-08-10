@@ -1,138 +1,72 @@
-#gmum.R
-[![Build Status](https://travis-ci.org/gmum/gmum.r.svg?branch=dev)](https://travis-ci.org/gmum/gmum.r/)
-<img src="http://cranlogs.r-pkg.org/badges/last-week/gmum.r">
+# gng.R
 
-gmum.R is a package consisting in various models. We focus on efficiency (underlying C++ implementation) and easy of usage.
-gmum.r is a close collaboration between GMUM group members (<a href="http://gmum.net">http://gmum.net</a>) and students.
+Fork of (<a href="https://github.com/gmum/gmum.r">gmum.R</a>) adapting the existing Growing Neural Gas algorithm for high dimensions and model sizes through the usage of Approximate Nearest Neighbour techniques. It internally uses an <a href="https://github.com/andrusha97/online-hnsw">online variant of HNSW</a>
 
-Package includes three subpackages:
-
-* SVM with various underlying libraries and modifications
-* Cross Entropy Clustering (CEC) clustering algorithm
-* Growing Neural Gas clustering algorithm
+Package includes:
+* Growing Neural Gas clustering algorithm from the original authors
+* Approximate Growing Neural Gas clustering algorithm
 
 ## Links
-
-* Documentation: [gmum.R.pdf](http://gmum.net/files/gmum.r/gmum.R.pdf)
-
 * Installation: [src/README.md](src/README.md)
-
-* Samples: [http://r.gmum.net/getting_started.html](http://r.gmum.net/getting_started.html)
-
-## SVM
-
-SVM Wrapper is a part of the gmum.R project which provides a popular Support Vector Machine inplementations wrapped in the R package.
-
-<small>SVM Iris and sample weights examples</small>
-<center><img src="./doc/img/svm_readme.png" width="100%"></img></center>
-
-
-### Example usage
-
-```R
-library('gmum.r')
-
-# Load a dataset, here we have provided an example 
-data(svm_breast_cancer_dataset)
-ds <- svm.breastcancer.dataset
-
-# Create new SVM object
-svm <- SVM( formula = X1~. ,
-            data = ds,
-            core = "libsvm",
-            kernel = "linear",
-            prep = "none",
-            C = 10) 
-
-x <- ds.X(svm)
-y <- ds.Y(svm)
-
-# Classify your dataset using predict function
-prediction <- predict(svm, x)
-
-# Check models accuracy
-acc <- svm.accuracy(prediction=y, target=prediction)
-```
 
 ## Growing Neural Gas
 
-Subpackage containing **efficient**, **online** GNG algorithm. It produces topological graph, that you can easily convert to igraph, or you can
-dump your model to optimized binary file and load it later on.
+Maintained subpackage containing the original GNG algorithm and the Approximate GNG Algorithm. Both produce topological graphs, that can be easily convert to igraph, or dumped to file and loaded in the future. The original GNG features and documentation remain the same.
 
-<small>Clustering of the UCI wine dataset</small>
-<center><img src="./doc/gng/img/gng_readme.png" width="100%"></img></center>
 
-### Example: cluster wine dataset
+### Example: cluster sift1M dataset with Approximate GNG
 
-In this example we will construct a clustering of UCI wine dataset using offline GNG.
-
+In this example we will construct a clustering of the <a href="http://corpus-texmex.irisa.fr/">SIFT1M dataset</a>. 
 ```R
 library(gmum.r)
 
 # Load data
-wine <- get.wine.dataset.X()
+# Already standardized and in csv form
+sift1M_norm <- read.csv("~/University/Thesis/tests/R/sift1M_data.csv")
 
 # Train in an offline manner
-gng <- GNG(wine, labels=get.wine.dataset.y(), max.nodes=20)
+# Cluster SIFT1M into 1K nodes over 1K iterations
+gng <- ApproximateGNG(sift1M_norm , max.nodes=1000, max.iter=1000, max_links = 16, efSearch = 16, efConstruction = 32)
 
-# Find closest node to vector composed of 1
-predict(gng, rep(1,ncol(wine)))
+#Train in an online manner
+gng <- ApproximateGNG(train.online = TRUE, dim=ncol(sift1M_norm), max.nodes=1000, max_links = 16, efSearch = 16, efConstruction = 32)
+insertExamples(gng, sift1M_norm)
+run(gng)
+Sys.sleep(100)
+pause(gng)
 
-# Find mean error
-meanError(gng)
-
-# Plot with first 2 coordinates as position
-plot(gng, vertex.color="cluster")
+# After training, confirm construction recal ~= 0.95, if not, retrain with greater efConstruction parameter
+# estimation of construction recall can be done with
+gng$getConstructionRecall(-1)
 ```
 
-## Cross Entropy Clustering
-
-CEC aims to efficiently implement Cross Entropy Clustering Algorithm as R extension.
-
-Cross-entropy clustering (shortly CEC) joins advantages of classical k-means with those of EM. Moreover, contrary to k-means and EM, CEC **finds the optimal number of clusters** by automatically removing redundant ones.
-
-<small>CEC clustering</small>
-<center><img src="./doc/cec/img/cec_mouse.png" width="60%"></img></center>
-
-
-### Example usage
-
+Usage is much the same as the original GNG but several performance indicators and QoL changes were added:
 ```R
-library(gmum.r)
+# Get Average Path Length of the HNSW Algorithm
+gng$getHNSWAvgPathLength(gng$getNumberNodes())
 
-data(cec.mouse1.spherical)
-dataset = cec.mouse1.spherical
+# If recall parameter was set to TRUE during construction, we can get the 2NN search recall with
+gng$getKey1Recall()
+gng$getKey2Recall()
 
-# That is the dataset we want to cluster
-plot(dataset)
+# Number of operations made:
+gng$getNRemovals()
+gng$getNMoves()
+gng$getNInsertions()
+gng$getNSearches()
 
-# Run cec with default parameters. Set the number of clusters and the dataset.
-c <- CEC(k=3, x=dataset)
-plot(c)
+# Quantization Error
+getQuantizationError(gng, sift1M_norm)
 
-# Since initial clusterization is random. It may be a good idea to run cec multiple times and choose the best result.
-c <- CEC(k=3, x=dataset, control.nstart=10)
-plot(c)
-
-# Better than before, however, we know that clusters are spherical; let's inform cec about that.
-c <- CEC(k=3, x=dataset, control.nstart=10, method.type='spherical')
-plot(c)
-
-# You can learn details of clustering like this
-centers(c)
-covMatrix(c)
-
-# You can predict cluster which a point would belong to:
-predict(c, c(1,1))
-
-# You can visualise size and shape of clusters
-plot(c, ellipses=TRUE)
-
-# Try the same with random assignment
-c <- CEC(k=3, x=dataset, control.nstart=10, method.type='spherical', method.init='random')
-plot(c)
+# Get Clustering dataframe (#nodes x dim)
+getNodes(gng)
 ```
 
-## Citation
-
-If you use gmum.r in your work please cite one of the papers, see `citation()`.
+## Approximate Growing Neural Gas Hyperparameters
+Hyperparams specific to Approximate Growing Neural Gas are:
+* `max_links` Defines number of links created for a new node of the HNSW graph upon insertion. 2-100 is a reasonable range. defining it to be higher works best on datasets with high intrinsic dimensionality or when high recall is needed
+* `efConstruction` 	
+Can be seen as controlling the trade-off between index construction time and index quality of the HNSW. Should be increased until we achieve at least 95% construction recall
+* `efSearch` Higher efSearch translates to better search recall but slower search times. Controls how approximate we can allow the ANN step (and consequently the GNG model) to be in exchange for slower GNG time
+* `nsw` Allows to constrict the HNSW to just 1 level, making it behave like the NSW algorithm
+* `recal`Tells the algorithm to calculate search recall during the process. Severely impacts GNG time. Useful for performance testing and debugging.
