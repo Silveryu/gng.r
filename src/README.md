@@ -11,7 +11,7 @@ Specify commit, tag, or branch name using **ref** argument. Defaults to "master"
 Run in R:
 
 ```{R}
-devtools::install_github("gmum/gmum.r", ref="dev")
+devtools::install_github("Silveryu/gng.r", ref="dev")
 ```
 
 Then load package for use:
